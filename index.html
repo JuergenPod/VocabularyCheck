@@ -851,21 +851,43 @@ function save(){
 }
 
 function _migrateOldKeys(){
-  // Old format had no direction in key: Jonas:es-de:d → Jonas:es-de:a-b:d
-  // Copy to BOTH directions (old data was shared); skip if new key already exists
+  // Old format had no direction: Jonas:es-de:d → Jonas:es-de:a-b:d
+  // Copy only to the CURRENT direction (mode is already loaded at this point)
   ['d','c','uc'].forEach(k=>{
     const oldKey=`${activeProfile}:${activeSetId}:${k}`;
     const val=localStorage.getItem(oldKey);
     if(val!==null){
-      ['a-b','b-a'].forEach(dir=>{
-        const newKey=`${activeProfile}:${activeSetId}:${dir}:${k}`;
-        if(!localStorage.getItem(newKey))localStorage.setItem(newKey,val);
-      });
+      if(!localStorage.getItem(pfx(k)))localStorage.setItem(pfx(k),val);
       localStorage.removeItem(oldKey);
     }
   });
-  // Old mode/unit keys used pfx (with no direction); rename to pfxS format (same string, just for clarity)
-  // Jonas:es-de:m is the same under both old pfx and new pfxS — no migration needed
+}
+
+function _fixMirroredMigration(){
+  // One-time fix: previous code incorrectly copied old data to BOTH directions.
+  // If a-b:d and b-a:d are identical for a profile+set, one was falsely mirrored.
+  // Keep only the direction matching the stored mode; clear the other.
+  if(localStorage.getItem('sq_mig_v2'))return;
+  try{
+    const profs=JSON.parse(localStorage.getItem('sq_profiles')||'[]');
+    const allSets=new Set(['es-de']);
+    profs.forEach(p=>{
+      try{JSON.parse(localStorage.getItem(`${p}:sets`)||'[]').forEach(s=>allSets.add(s.id));}catch(x){}
+    });
+    profs.forEach(p=>{
+      allSets.forEach(sid=>{
+        const realDir=localStorage.getItem(`${p}:${sid}:m`)||'a-b';
+        const wrongDir=realDir==='a-b'?'b-a':'a-b';
+        const realD=localStorage.getItem(`${p}:${sid}:${realDir}:d`);
+        const wrongD=localStorage.getItem(`${p}:${sid}:${wrongDir}:d`);
+        if(realD!==null&&wrongD!==null&&realD===wrongD){
+          // identical content → wrongDir was a false mirror, delete it
+          ['d','c','uc'].forEach(k=>localStorage.removeItem(`${p}:${sid}:${wrongDir}:${k}`));
+        }
+      });
+    });
+  }catch(x){}
+  localStorage.setItem('sq_mig_v2','1');
 }
 
 function _loadDirectional(){
@@ -1581,11 +1603,6 @@ function renderUnitOverview(){
       // new key format includes direction
       doneIds=new Set(JSON.parse(localStorage.getItem(`${p}:${activeSetId}:${overviewDir}:d`)||'[]'));
       uc=JSON.parse(localStorage.getItem(`${p}:${activeSetId}:${overviewDir}:uc`)||'{}');
-      // fallback: also check old key format (migration may not have run for other profiles)
-      if(!doneIds.size){
-        const old=localStorage.getItem(`${p}:${activeSetId}:d`);
-        if(old)doneIds=new Set(JSON.parse(old));
-      }
       // detect completed units
       set.vocab.reduce((m,v)=>{m.has(v.u)?m.get(v.u).push(v):m.set(v.u,[v]);return m;},new Map())
         .forEach((voc,u)=>{if(!uc[u]&&voc.every(v=>doneIds.has(v.id)))uc[u]='—';});
@@ -1739,6 +1756,7 @@ document.addEventListener('click',e=>{
 
 loadDarkMode();
 loadProfiles();
+_fixMirroredMigration();   // one-time cleanup of falsely mirrored direction data
 if(!activeProfile){
   showProfileOverlay();
 }else{
