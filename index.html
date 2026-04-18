@@ -222,6 +222,7 @@ body.dark .history-header span{color:#9ca3af}
 body.dark .import-preview{background:#2d3748;color:#9ca3af}
 body.dark .import-field input[type=text]{background:#2d3748;border-color:#4b5563;color:#f3f4f6}
 body.dark .import-check{color:#d1d5db}
+body.dark #importMergeSet{background:#2d3748;border-color:#4b5563;color:#d1d5db}
 body.dark .load-link{color:#7eb3ff}
 /* ── Streak milestone animation ── */
 #confettiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:500;opacity:0;transition:opacity .25s}
@@ -304,10 +305,23 @@ body.dark .load-link{color:#7eb3ff}
           </div>
         </div>
       </div>
+      <div id="importNewSetFields">
+        <label class="import-check">
+          <input type="checkbox" id="importStripB" checked>
+          Artikel in Zielsprache (B) optional (z.B. Deutsch)
+        </label>
+      </div>
+      <div style="border-top:1px solid var(--border);margin:12px 0 10px"></div>
       <label class="import-check">
-        <input type="checkbox" id="importStripB" checked>
-        Artikel in Zielsprache (B) optional (z.B. Deutsch)
+        <input type="checkbox" id="importMergeCheck" onchange="toggleMergeTarget()">
+        Zu bestehendem Set hinzufügen (Erweiterung)
       </label>
+      <div id="importMergeTarget" style="display:none;margin-top:8px;margin-bottom:10px">
+        <div class="import-field">
+          <label>Ziel-Set</label>
+          <select id="importMergeSet" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;background:#fff;outline:none;color:#333"></select>
+        </div>
+      </div>
       <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="doImport()">Importieren</button>
     </div>
     <button class="btn btn-outline" style="width:100%" onclick="closeImport()">Abbrechen</button>
@@ -789,10 +803,18 @@ let activeProfile='';
 let profiles=[];
 let activeSetId='es-de';
 let customSets=[];
+let setExtensions={};   // {setId: [{id,a,b,u}, ...]}  — per-profile vocab extensions
 
+function loadSetExtensions(){
+  setExtensions={};
+  getAllSets().forEach(s=>{
+    try{const e=JSON.parse(localStorage.getItem(pfxP(`${s.id}:ext`))||'[]');if(e.length)setExtensions[s.id]=e;}catch(x){}
+  });
+}
 function getActiveSet(){
-  if(activeSetId==='es-de')return BUILTIN_SET;
-  return customSets.find(s=>s.id===activeSetId)||BUILTIN_SET;
+  const base=activeSetId==='es-de'?BUILTIN_SET:(customSets.find(s=>s.id===activeSetId)||BUILTIN_SET);
+  const ext=setExtensions[activeSetId]||[];
+  return ext.length?{...base,vocab:[...base.vocab,...ext]}:base;
 }
 function getAllSets(){return[BUILTIN_SET,...customSets];}
 function getAllUnits(){return[...new Set(getActiveSet().vocab.map(v=>v.u))].sort((a,b)=>+a-+b);}
@@ -810,36 +832,63 @@ let unitCompletions={};  // {unitId: "DD.MM.YY"}
 let unitPanelOpen=false;
 
 // ═══════════════════════════════════════════════════════════
-// STORAGE  (all keys namespaced by profile + set)
+// STORAGE  (all keys namespaced by profile + set [+ direction])
 // ═══════════════════════════════════════════════════════════
-function pfx(k){return`${activeProfile}:${activeSetId}:${k}`;}
+// pfx  → progress keys   (profile : set : direction : key)  e.g. Jonas:es-de:a-b:d
+// pfxS → set-level keys  (profile : set : key)              e.g. Jonas:es-de:m
+// pfxP → profile keys    (profile : key)                    e.g. Jonas:lang
+function pfx(k){return`${activeProfile}:${activeSetId}:${mode}:${k}`;}
+function pfxS(k){return`${activeProfile}:${activeSetId}:${k}`;}
 function pfxP(k){return`${activeProfile}:${k}`;}
 
 function save(){
   localStorage.setItem(pfx('d'),JSON.stringify([...doneSet]));
   localStorage.setItem(pfx('c'),JSON.stringify(counts));
-  localStorage.setItem(pfx('m'),mode);
-  localStorage.setItem(pfx('u'),JSON.stringify([...activeUnits]));
   localStorage.setItem(pfx('uc'),JSON.stringify(unitCompletions));
+  localStorage.setItem(pfxS('m'),mode);
+  localStorage.setItem(pfxS('u'),JSON.stringify([...activeUnits]));
   localStorage.setItem(pfxP('lang'),activeSetId);
 }
 
-function load(){
+function _migrateOldKeys(){
+  // Old format had no direction in key: Jonas:es-de:d → Jonas:es-de:a-b:d
+  // Copy to BOTH directions (old data was shared); skip if new key already exists
+  ['d','c','uc'].forEach(k=>{
+    const oldKey=`${activeProfile}:${activeSetId}:${k}`;
+    const val=localStorage.getItem(oldKey);
+    if(val!==null){
+      ['a-b','b-a'].forEach(dir=>{
+        const newKey=`${activeProfile}:${activeSetId}:${dir}:${k}`;
+        if(!localStorage.getItem(newKey))localStorage.setItem(newKey,val);
+      });
+      localStorage.removeItem(oldKey);
+    }
+  });
+  // Old mode/unit keys used pfx (with no direction); rename to pfxS format (same string, just for clarity)
+  // Jonas:es-de:m is the same under both old pfx and new pfxS — no migration needed
+}
+
+function _loadDirectional(){
   try{
     doneSet=new Set(JSON.parse(localStorage.getItem(pfx('d'))||'[]'));
     counts=JSON.parse(localStorage.getItem(pfx('c'))||'{}');
-    mode=localStorage.getItem(pfx('m'))||'a-b';
-    const su=localStorage.getItem(pfx('u'));
+    unitCompletions=JSON.parse(localStorage.getItem(pfx('uc'))||'{}');
+  }catch(e){doneSet=new Set();counts={};unitCompletions={};}
+  // mark already-completed units (migration / initial detection)
+  getActiveSet().vocab.reduce((m,v)=>{m.has(v.u)?m.get(v.u).push(v):m.set(v.u,[v]);return m;},new Map())
+    .forEach((vocab,u)=>{if(!unitCompletions[u]&&vocab.every(v=>doneSet.has(v.id)))unitCompletions[u]='—';});
+}
+
+function load(){
+  mode=localStorage.getItem(pfxS('m'))||'a-b';        // must come before pfx() calls
+  _migrateOldKeys();
+  _loadDirectional();
+  try{
+    const su=localStorage.getItem(pfxS('u'));
     activeUnits=su?new Set(JSON.parse(su)):new Set(getAllUnits());
     streakHistory=JSON.parse(localStorage.getItem(pfxP('h'))||'[]');
-    unitCompletions=JSON.parse(localStorage.getItem(pfx('uc'))||'{}');
-  }catch(e){
-    doneSet=new Set();counts={};mode='a-b';
-    activeUnits=new Set(getAllUnits());streakHistory=[];unitCompletions={};
-  }
-  // Migrate: mark units that were already completed before this feature existed
-  getActiveSet().vocab.reduce((m,v)=>{m.has(v.u)?m.get(v.u).push(v):m.set(v.u,[v]);return m;},new Map())
-    .forEach((vocab,u)=>{if(!unitCompletions[u]&&vocab.every(v=>doneSet.has(v.id))){unitCompletions[u]='—';}});
+  }catch(e){activeUnits=new Set(getAllUnits());streakHistory=[];}
+  loadSetExtensions();
 }
 
 function saveStreakEntry(){
@@ -1046,22 +1095,35 @@ function renderSetSelector(){
 function openImport(){
   document.getElementById('importOverlay').style.display='flex';
   document.getElementById('importPreview').style.display='none';
-  const fi=document.getElementById('csvFileInput');
-  if(fi)fi.value='';
+  const fi=document.getElementById('csvFileInput');if(fi)fi.value='';
+  // reset merge toggle
+  const mc=document.getElementById('importMergeCheck');if(mc)mc.checked=false;
+  const mt=document.getElementById('importMergeTarget');if(mt)mt.style.display='none';
+  const nf=document.getElementById('importNewSetFields');if(nf)nf.style.display='block';
 }
 function closeImport(){document.getElementById('importOverlay').style.display='none';}
 
+function toggleMergeTarget(){
+  const checked=document.getElementById('importMergeCheck').checked;
+  const mt=document.getElementById('importMergeTarget');
+  const nf=document.getElementById('importNewSetFields');
+  if(mt)mt.style.display=checked?'block':'none';
+  if(nf)nf.style.display=checked?'none':'block';
+  if(checked){
+    const sel=document.getElementById('importMergeSet');
+    if(sel)sel.innerHTML=getAllSets().map(s=>`<option value="${s.id}">${s.flagA} ${s.name}</option>`).join('');
+  }
+}
+
 function previewCSV(input){
-  const file=input.files[0];
-  if(!file)return;
+  const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=e=>{
     const text=e.target.result;
     const lines=text.trim().split(/\r?\n/);
     if(lines.length<2){alert('Datei enthält zu wenig Zeilen.');return;}
     const headers=parseCSVLine(lines[0]);
-    const langA=headers[0]||'Sprache A';
-    const langB=headers[1]||'Sprache B';
+    const langA=headers[0]||'Sprache A',langB=headers[1]||'Sprache B';
     const count=lines.length-1;
     document.getElementById('importName').value=langA;
     document.getElementById('importFlagA').value='📖';
@@ -1073,28 +1135,49 @@ function previewCSV(input){
   reader.readAsText(file,'UTF-8');
 }
 
-function doImport(){
-  const text=document.getElementById('csvFileInput').dataset.text||'';
-  if(!text){alert('Bitte zuerst eine Datei auswählen.');return;}
-  const name=document.getElementById('importName').value.trim()||'Importiert';
-  const flagA=document.getElementById('importFlagA').value.trim()||'📖';
-  const flagB=document.getElementById('importFlagB').value.trim()||'🎯';
-  const stripB=document.getElementById('importStripB').checked;
-
+function _parseVocabLines(text,startId){
   const lines=text.trim().split(/\r?\n/);
-  const headers=parseCSVLine(lines[0]);
-  const langA=headers[0]||name;
-  const langB=headers[1]||'B';
-
   const vocab=[];
   for(let i=1;i<lines.length;i++){
     if(!lines[i].trim())continue;
     const cols=parseCSVLine(lines[i]);
     if(cols.length<2||(!cols[0]&&!cols[1]))continue;
-    vocab.push({id:i,a:cols[0]||'',b:cols[1]||'',u:(cols[2]||'1').trim()});
+    vocab.push({id:startId+vocab.length,a:cols[0]||'',b:cols[1]||'',u:(cols[2]||'10').trim()});
   }
-  if(!vocab.length){alert('Keine gültigen Einträge gefunden.');return;}
+  return vocab;
+}
 
+function doImport(){
+  const text=document.getElementById('csvFileInput').dataset.text||'';
+  if(!text){alert('Bitte zuerst eine Datei auswählen.');return;}
+
+  if(document.getElementById('importMergeCheck')?.checked){
+    // ── MERGE into existing set ──────────────────────────────
+    const targetId=document.getElementById('importMergeSet').value;
+    const targetSet=getAllSets().find(s=>s.id===targetId)||getActiveSet();
+    const existingExt=setExtensions[targetId]||[];
+    const maxId=Math.max(0,...targetSet.vocab.map(v=>v.id),...existingExt.map(v=>v.id));
+    const newVocab=_parseVocabLines(text,maxId+1);
+    if(!newVocab.length){alert('Keine gültigen Einträge gefunden.');return;}
+    const merged=[...existingExt,...newVocab];
+    setExtensions[targetId]=merged;
+    localStorage.setItem(pfxP(`${targetId}:ext`),JSON.stringify(merged));
+    closeImport();
+    if(targetId!==activeSetId)switchSet(targetId);
+    else{buildPool();renderAll();}
+    return;
+  }
+
+  // ── NEW set ──────────────────────────────────────────────
+  const name=document.getElementById('importName').value.trim()||'Importiert';
+  const flagA=document.getElementById('importFlagA').value.trim()||'📖';
+  const flagB=document.getElementById('importFlagB').value.trim()||'🎯';
+  const stripB=document.getElementById('importStripB').checked;
+  const lines=text.trim().split(/\r?\n/);
+  const headers=parseCSVLine(lines[0]);
+  const langA=headers[0]||name,langB=headers[1]||'B';
+  const vocab=_parseVocabLines(text,1);
+  if(!vocab.length){alert('Keine gültigen Einträge gefunden.');return;}
   const id='custom_'+Date.now();
   customSets.push({id,name,langA,langB,flagA,flagB,stripArticlesOnB:stripB,stripArticlesOnA:false,vocab});
   saveProfiles();
@@ -1208,13 +1291,22 @@ function markCorrect(){
 
 function setMode(m){
   if(phase!=='start'&&phase!=='complete')return;
-  mode=m;save();render();
+  if(m===mode)return;
+  save();           // persist current direction before switching
+  mode=m;
+  _loadDirectional(); // load the other direction's progress
+  save();           // persist new mode preference (pfxS('m'))
+  sesCorrect=0;streak=0;sesMaxStreak=0;
+  phase='start';pool=[];cur=null;
+  buildPool();renderAll();
 }
 
 function resetProgress(){
-  if(!confirm('Fortschritt für dieses Vokabular zurücksetzen?'))return;
+  if(!confirm('Fortschritt für dieses Vokabular zurücksetzen? (beide Richtungen)'))return;
   saveStreakEntry();
-  localStorage.removeItem(pfx('d'));localStorage.removeItem(pfx('c'));localStorage.removeItem(pfx('uc'));
+  ['a-b','b-a'].forEach(dir=>
+    ['d','c','uc'].forEach(k=>localStorage.removeItem(`${activeProfile}:${activeSetId}:${dir}:${k}`))
+  );
   doneSet=new Set();counts={};unitCompletions={};sesCorrect=0;streak=0;sesMaxStreak=0;phase='start';pool=[];cur=null;
   buildPool();renderAll();
 }
@@ -1455,12 +1547,15 @@ function checkUnitCompletion(entry){
 }
 
 let overviewOpen=false;
+let overviewDir='a-b';
+
 function toggleOverview(){
   overviewOpen=!overviewOpen;
   document.getElementById('overviewPanel').style.display=overviewOpen?'block':'none';
   document.getElementById('overviewArrow').classList.toggle('open',overviewOpen);
   if(overviewOpen)renderUnitOverview();
 }
+function setOverviewDir(dir){overviewDir=dir;renderUnitOverview();}
 
 function renderUnitOverview(){
   const panel=document.getElementById('overviewPanel');
@@ -1468,17 +1563,30 @@ function renderUnitOverview(){
   const set=getActiveSet();
   const units=getAllUnits();
   const profs=profiles.filter(Boolean);
+  // direction toggle
+  const fa=mode==='a-b'?set.flagA:set.flagB, fb=mode==='a-b'?set.flagB:set.flagA;
+  const lA=set.langA, lB=set.langB;
+  const dirToggle=`<div class="mode-toggle" style="margin-bottom:14px">
+    <button class="mode-btn${overviewDir==='a-b'?' active':''}" onclick="setOverviewDir('a-b')">${set.flagA} ${lA} → ${set.flagB} ${lB}</button>
+    <button class="mode-btn${overviewDir==='b-a'?' active':''}" onclick="setOverviewDir('b-a')">${set.flagB} ${lB} → ${set.flagA} ${lA}</button>
+  </div>`;
   if(!profs.length){
-    panel.innerHTML='<p style="font-size:.82rem;color:var(--gray);margin-top:12px;font-style:italic">Noch keine Profile vorhanden.</p>';
+    panel.innerHTML=dirToggle+'<p style="font-size:.82rem;color:var(--gray);margin-top:4px;font-style:italic">Noch keine Profile vorhanden.</p>';
     return;
   }
-  // read stored data for every profile
+  // read direction-specific data for every profile
   const pData=profs.map(p=>{
     let doneIds=new Set(),uc={};
     try{
-      doneIds=new Set(JSON.parse(localStorage.getItem(`${p}:${activeSetId}:d`)||'[]'));
-      uc=JSON.parse(localStorage.getItem(`${p}:${activeSetId}:uc`)||'{}');
-      // migrate silently
+      // new key format includes direction
+      doneIds=new Set(JSON.parse(localStorage.getItem(`${p}:${activeSetId}:${overviewDir}:d`)||'[]'));
+      uc=JSON.parse(localStorage.getItem(`${p}:${activeSetId}:${overviewDir}:uc`)||'{}');
+      // fallback: also check old key format (migration may not have run for other profiles)
+      if(!doneIds.size){
+        const old=localStorage.getItem(`${p}:${activeSetId}:d`);
+        if(old)doneIds=new Set(JSON.parse(old));
+      }
+      // detect completed units
       set.vocab.reduce((m,v)=>{m.has(v.u)?m.get(v.u).push(v):m.set(v.u,[v]);return m;},new Map())
         .forEach((voc,u)=>{if(!uc[u]&&voc.every(v=>doneIds.has(v.id)))uc[u]='—';});
     }catch(e){}
@@ -1486,10 +1594,8 @@ function renderUnitOverview(){
   });
   const colDef=`auto ${pData.map(()=>'1fr').join(' ')}`;
   let h=`<div class="ov-wrap"><div class="ov-grid" style="grid-template-columns:${colDef}">`;
-  // header
   h+=`<div class="ov-cell ov-head" style="min-width:90px">Einheit</div>`;
   pData.forEach(pd=>{h+=`<div class="ov-cell ov-head${pd.name===activeProfile?' ov-me':''}">${esc(pd.name)}</div>`;});
-  // unit rows
   units.forEach(u=>{
     const vocab=set.vocab.filter(v=>v.u===u);
     const total=vocab.length;
@@ -1507,7 +1613,6 @@ function renderUnitOverview(){
       }
     });
   });
-  // summary row
   h+=`<div class="ov-cell ov-sum-label">Gesamt</div>`;
   pData.forEach(pd=>{
     const cu=units.filter(u=>pd.uc[u]).length;
@@ -1516,10 +1621,7 @@ function renderUnitOverview(){
     h+=`<div class="ov-cell ov-sum">${cu}/${units.length} Lekt.<span class="ov-unit-cnt">${dw}/${tw} Wörter</span></div>`;
   });
   h+=`</div></div>`;
-  panel.innerHTML=h;
-  // fix dark-mode card title color
-  const t=document.getElementById('ovTitle');
-  if(t)t.style.color='';
+  panel.innerHTML=dirToggle+h;
 }
 
 // ═══════════════════════════════════════════════════════════
