@@ -126,6 +126,72 @@ h1{font-size:1.2rem;font-weight:700;color:#1a1a2e}
 .import-check{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:.88rem;color:#333}
 .import-preview{background:var(--light);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.82rem;color:var(--gray)}
 @media(max-width:480px){.container{padding:10px}.q-word{font-size:1.5rem}.p-grid{grid-template-columns:1fr}.header-row2{flex-direction:column;align-items:flex-start}}
+/* ── Dark mode ── */
+body,
+.card,.overlay-inner,.dropdown-menu,.dropdown-new-input input,
+.set-select,.ans-input,.p-btn,.uchip,.import-field input[type=text],
+.btn-outline,.mode-toggle,.streak-badge,.c-stat,.prog-bg{
+  transition:background .22s,border-color .22s,color .22s,box-shadow .22s}
+body.dark{background:#111827}
+body.dark .card{background:#1f2937;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+body.dark h1{color:#f3f4f6}
+body.dark .q-word{color:#f3f4f6}
+body.dark .prog-info strong,.dark .stat-val{color:#f3f4f6}
+body.dark .stat-val{color:#f3f4f6}
+body.dark .history-header strong{color:#f3f4f6}
+body.dark .overlay-inner{background:#1f2937}
+body.dark .overlay-inner h2{color:#f3f4f6}
+body.dark .overlay-inner p{color:#9ca3af}
+body.dark .overlay-input{background:#2d3748;border-color:#4b5563;color:#f3f4f6}
+body.dark .overlay-input::placeholder{color:#6b7280}
+body.dark .existing-profiles{border-top-color:#374151}
+body.dark .existing-profiles p{color:#9ca3af}
+body.dark .profile-chip{border-color:#7eb3ff;color:#7eb3ff}
+body.dark .profile-chip:hover{background:#7eb3ff;color:#111827}
+body.dark .dropdown-menu{background:#1f2937;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+body.dark .dropdown-item{color:#d1d5db}
+body.dark .dropdown-item:hover{background:#2d3748}
+body.dark .dropdown-item.active{color:#7eb3ff}
+body.dark .dropdown-divider{background:#374151}
+body.dark .dropdown-new-input{border-top-color:#374151}
+body.dark .dropdown-new-input input{background:#2d3748;border-color:#4b5563;color:#f3f4f6}
+body.dark .mode-toggle{background:#2d3748}
+body.dark .mode-btn{color:#9ca3af}
+body.dark .mode-btn.active{background:#374151;color:#7eb3ff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+body.dark .set-select{background:#2d3748;border-color:#4b5563;color:#d1d5db}
+body.dark .btn-outline{background:#2d3748;border-color:#4b5563;color:#d1d5db}
+body.dark .btn-outline:hover{border-color:#7eb3ff;color:#7eb3ff;background:#1e3a5f}
+body.dark .prog-bg{background:#2d3748}
+body.dark .prog-info{color:#9ca3af}
+body.dark .stats{color:#9ca3af}
+body.dark .q-label,body.dark .q-unit,body.dark .hint{color:#9ca3af}
+body.dark .unit-summary{color:#9ca3af}
+body.dark .unit-header>span:first-child{color:#f3f4f6}
+body.dark .unit-toggle-arrow{color:#9ca3af}
+body.dark .uchip{background:#2d3748;border-color:#4b5563;color:#9ca3af}
+body.dark .uchip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+body.dark .ans-input{background:#2d3748;border-color:#4b5563;color:#f3f4f6}
+body.dark .ans-input::placeholder{color:#6b7280}
+body.dark .ans-input:focus{border-color:#7eb3ff}
+body.dark .p-btn{background:#2d3748;border-color:#4b5563;color:#d1d5db}
+body.dark .p-btn:hover:not(:disabled){border-color:#7eb3ff;color:#7eb3ff;background:#1e3a5f}
+body.dark .p-btn.ok{border-color:#4ade80;background:#14291e;color:#4ade80}
+body.dark .p-btn.fail{border-color:#f87171;background:#291414;color:#f87171}
+body.dark .fb.ok{background:#14291e;color:#4ade80;border-color:#2d5a38}
+body.dark .fb.fail{background:#291414;color:#f87171;border-color:#5a2d2d}
+body.dark .c-stat{background:#2d3748}
+body.dark .c-stat-l{color:#9ca3af}
+body.dark .streak-badge{background:#2d3748}
+body.dark .streak-badge.best{background:#3d3010;border-color:#856404}
+body.dark .streak-num{color:#7eb3ff}
+body.dark .streak-date,.dark .streak-mode{color:#6b7280}
+body.dark .streak-date,body.dark .streak-mode{color:#6b7280}
+body.dark .no-history{color:#6b7280}
+body.dark .history-header span{color:#9ca3af}
+body.dark .import-preview{background:#2d3748;color:#9ca3af}
+body.dark .import-field input[type=text]{background:#2d3748;border-color:#4b5563;color:#f3f4f6}
+body.dark .import-check{color:#d1d5db}
+body.dark .load-link{color:#7eb3ff}
 /* ── Streak milestone animation ── */
 #confettiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:500;opacity:0;transition:opacity .25s}
 #confettiCanvas.active{opacity:1}
@@ -160,9 +226,12 @@ h1{font-size:1.2rem;font-weight:700;color:#1a1a2e}
 <!-- Profile bar -->
 <div class="p-bar" id="pBar">
   <span>👤 <strong id="pbName">–</strong></span>
-  <div class="dropdown-wrap">
-    <button class="p-bar-btn" onclick="toggleProfileMenu()">Profil wechseln ▾</button>
-    <div class="dropdown-menu" id="profileMenu" style="display:none"></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="p-bar-btn" id="dmToggle" onclick="toggleDarkMode()" title="Dark Mode umschalten" style="font-size:1rem;padding:3px 8px">🌙</button>
+    <div class="dropdown-wrap">
+      <button class="p-bar-btn" onclick="toggleProfileMenu()">Profil wechseln ▾</button>
+      <div class="dropdown-menu" id="profileMenu" style="display:none"></div>
+    </div>
   </div>
 </div>
 
@@ -1291,6 +1360,23 @@ function renderComplete(){
 }
 
 // ═══════════════════════════════════════════════════════════
+// DARK MODE
+// ═══════════════════════════════════════════════════════════
+function toggleDarkMode(){
+  const dark=!document.body.classList.contains('dark');
+  applyDarkMode(dark);
+  localStorage.setItem('sq_darkmode',dark?'1':'0');
+}
+function applyDarkMode(dark){
+  document.body.classList.toggle('dark',dark);
+  const btn=document.getElementById('dmToggle');
+  if(btn)btn.textContent=dark?'☀️':'🌙';
+}
+function loadDarkMode(){
+  applyDarkMode(localStorage.getItem('sq_darkmode')==='1');
+}
+
+// ═══════════════════════════════════════════════════════════
 // STREAK MILESTONE ANIMATION
 // ═══════════════════════════════════════════════════════════
 const MILESTONES=[
@@ -1386,6 +1472,7 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('.dropdown-wrap'))closeMenu();
 });
 
+loadDarkMode();
 loadProfiles();
 if(!activeProfile){
   showProfileOverlay();
