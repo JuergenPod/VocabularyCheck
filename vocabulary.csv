@@ -1,0 +1,379 @@
+spanish,german,unit
+hola,hallo,0
+adiós,auf Wiedersehen,0
+buenos días,guten Morgen,0
+buenas tardes,guten Tag,0
+buenas noches,gute Nacht,0
+¿qué tal?,wie geht's?,0
+bien,gut,0
+mal,schlecht,0
+regular,es geht,0
+gracias,danke,0
+de nada,bitte,0
+por favor,bitte sehr,0
+perdón,Entschuldigung,0
+lo siento,es tut mir leid,0
+sí,ja,0
+no,nein,0
+mucho gusto,sehr erfreut,0
+encantado,angenehm,0
+el amigo,der Freund,1
+la amiga,die Freundin,1
+el padre,der Vater,1
+la madre,die Mutter,1
+el hermano,der Bruder,1
+la hermana,die Schwester,1
+el abuelo,der Großvater,1
+la abuela,die Großmutter,1
+el tío,der Onkel,1
+la tía,die Tante,1
+el primo,der Cousin,1
+la prima,die Cousine,1
+el hijo,der Sohn,1
+la hija,die Tochter,1
+el nieto,der Enkel,1
+la nieta,die Enkelin,1
+el hombre,der Mann,1
+la mujer,die Frau,1
+el niño,das Kind,1
+el chico,der Junge,1
+la chica,das Mädchen,1
+el bebé,das Baby,1
+la familia,die Familie,1
+joven,jung,1
+viejo,alt,1
+alto,groß,1
+bajo,klein,1
+guapo,hübsch,1
+feo,hässlich,1
+simpático,sympathisch,1
+antipático,unsympathisch,1
+inteligente,intelligent,1
+tonto,dumm,1
+ser,sein,1
+tener,haben,1
+llamarse,heißen,1
+¿Cómo te llamas?,Wie heißt du?,1
+¿Cuántos años tienes?,Wie alt bist du?,1
+¿De dónde eres?,Woher kommst du?,1
+el libro,das Buch,2
+el cuaderno,das Heft,2
+el lápiz,der Bleistift,2
+el bolígrafo,der Kugelschreiber,2
+la pluma,der Füller,2
+la goma,der Radiergummi,2
+la regla,das Lineal,2
+las tijeras,die Schere,2
+la mochila,der Rucksack,2
+el estuche,das Federmäppchen,2
+la carpeta,der Ordner,2
+el papel,das Papier,2
+el diccionario,das Wörterbuch,2
+la pizarra,die Tafel,2
+la tiza,die Kreide,2
+el rotulador,der Filzstift,2
+el escritorio,der Schreibtisch,2
+la silla,der Stuhl,2
+la mesa,der Tisch,2
+la ventana,das Fenster,2
+la puerta,die Tür,2
+el reloj,die Uhr,2
+el ordenador,der Computer,2
+la clase,die Klasse,2
+el aula,das Klassenzimmer,2
+el colegio,die Schule,2
+la universidad,die Universität,2
+las matemáticas,die Mathematik,2
+la historia,die Geschichte,2
+la geografía,die Erdkunde,2
+las ciencias,die Naturwissenschaften,2
+la física,die Physik,2
+la química,die Chemie,2
+la biología,die Biologie,2
+la música,die Musik,2
+el arte,die Kunst,2
+la educación física,der Sport,2
+el recreo,die Pause,2
+el examen,die Prüfung,2
+la nota,die Note,2
+estudiar,lernen,2
+aprender,lernen,2
+enseñar,lehren,2
+leer,lesen,2
+escribir,schreiben,2
+hablar,sprechen,2
+escuchar,hören,2
+preguntar,fragen,2
+responder,antworten,2
+la casa,das Haus,3
+el piso,die Wohnung,3
+la habitación,das Zimmer,3
+el dormitorio,das Schlafzimmer,3
+el salón,das Wohnzimmer,3
+la cocina,die Küche,3
+el baño,das Badezimmer,3
+el comedor,das Esszimmer,3
+el pasillo,der Flur,3
+el garaje,die Garage,3
+el jardín,der Garten,3
+el balcón,der Balkon,3
+la terraza,die Terrasse,3
+el suelo,der Boden,3
+la pared,die Wand,3
+la escalera,die Treppe,3
+el ascensor,der Aufzug,3
+la cama,das Bett,3
+el armario,der Schrank,3
+la estantería,das Regal,3
+el sofá,das Sofa,3
+el sillón,der Sessel,3
+la lámpara,die Lampe,3
+la alfombra,der Teppich,3
+el espejo,der Spiegel,3
+la televisión,der Fernseher,3
+el frigorífico,der Kühlschrank,3
+el horno,der Ofen,3
+el microondas,die Mikrowelle,3
+la lavadora,die Waschmaschine,3
+la ducha,die Dusche,3
+la bañera,die Badewanne,3
+el lavabo,das Waschbecken,3
+el inodoro,die Toilette,3
+vivir,wohnen,3
+mudarse,umziehen,3
+limpiar,putzen,3
+ordenar,aufräumen,3
+cocinar,kochen,3
+el lunes,der Montag,4
+el martes,der Dienstag,4
+el miércoles,der Mittwoch,4
+el jueves,der Donnerstag,4
+el viernes,der Freitag,4
+el sábado,der Samstag,4
+el domingo,der Sonntag,4
+la semana,die Woche,4
+el fin de semana,das Wochenende,4
+hoy,heute,4
+ayer,gestern,4
+mañana,morgen,4
+enero,Januar,4
+febrero,Februar,4
+marzo,März,4
+abril,April,4
+mayo,Mai,4
+junio,Juni,4
+julio,Juli,4
+agosto,August,4
+septiembre,September,4
+octubre,Oktober,4
+noviembre,November,4
+diciembre,Dezember,4
+el mes,der Monat,4
+el año,das Jahr,4
+la fecha,das Datum,4
+el día,der Tag,4
+la primavera,der Frühling,4
+el verano,der Sommer,4
+el otoño,der Herbst,4
+el invierno,der Winter,4
+la hora,die Uhrzeit,4
+el minuto,die Minute,4
+la mañana,der Morgen,4
+la tarde,der Nachmittag,4
+la noche,die Nacht,4
+medianoche,Mitternacht,4
+mediodía,Mittag,4
+el desayuno,das Frühstück,5
+el almuerzo,das Mittagessen,5
+la cena,das Abendessen,5
+el agua,das Wasser,5
+el zumo,der Saft,5
+el café,der Kaffee,5
+el té,der Tee,5
+la leche,die Milch,5
+el refresco,die Limonade,5
+el vino,der Wein,5
+la cerveza,das Bier,5
+el pan,das Brot,5
+el bocadillo,das Sandwich,5
+la tostada,der Toast,5
+la mantequilla,die Butter,5
+la mermelada,die Marmelade,5
+el queso,der Käse,5
+el jamón,der Schinken,5
+el huevo,das Ei,5
+la carne,das Fleisch,5
+el pollo,das Hähnchen,5
+el pescado,der Fisch,5
+el arroz,der Reis,5
+la pasta,die Nudeln,5
+la patata,die Kartoffel,5
+la verdura,das Gemüse,5
+la ensalada,der Salat,5
+la lechuga,die Salatblätter,5
+el tomate,die Tomate,5
+la zanahoria,die Karotte,5
+la cebolla,die Zwiebel,5
+la fruta,das Obst,5
+la manzana,der Apfel,5
+la naranja,die Orange,5
+el plátano,die Banane,5
+la pera,die Birne,5
+la fresa,die Erdbeere,5
+la uva,die Traube,5
+el postre,der Nachtisch,5
+el helado,das Eis,5
+el pastel,der Kuchen,5
+la tarta,die Torte,5
+el chocolate,die Schokolade,5
+el azúcar,der Zucker,5
+la sal,das Salz,5
+tener hambre,Hunger haben,5
+tener sed,Durst haben,5
+comer,essen,5
+beber,trinken,5
+desayunar,frühstücken,5
+almorzar,zu Mittag essen,5
+cenar,zu Abend essen,5
+el cuerpo,der Körper,6
+la cabeza,der Kopf,6
+el pelo,das Haar,6
+la cara,das Gesicht,6
+los ojos,die Augen,6
+la nariz,die Nase,6
+la boca,der Mund,6
+la oreja,das Ohr,6
+el diente,der Zahn,6
+el cuello,der Hals,6
+el hombro,die Schulter,6
+el brazo,der Arm,6
+el codo,der Ellbogen,6
+la mano,die Hand,6
+el dedo,der Finger,6
+la pierna,das Bein,6
+la rodilla,das Knie,6
+el pie,der Fuß,6
+el estómago,der Bauch,6
+la espalda,der Rücken,6
+el corazón,das Herz,6
+enfermo,krank,6
+sano,gesund,6
+el dolor,der Schmerz,6
+la enfermedad,die Krankheit,6
+el resfriado,die Erkältung,6
+la gripe,die Grippe,6
+la fiebre,das Fieber,6
+la tos,der Husten,6
+el médico,der Arzt,6
+la médica,die Ärztin,6
+el hospital,das Krankenhaus,6
+la farmacia,die Apotheke,6
+la medicina,das Medikament,6
+doler,wehtun,6
+tener fiebre,Fieber haben,6
+tener tos,Husten haben,6
+la ropa,die Kleidung,7
+la camisa,das Hemd,7
+la camiseta,das T-Shirt,7
+el pantalón,die Hose,7
+los vaqueros,die Jeans,7
+la falda,der Rock,7
+el vestido,das Kleid,7
+la chaqueta,die Jacke,7
+el abrigo,der Mantel,7
+el jersey,der Pullover,7
+la sudadera,das Sweatshirt,7
+los calcetines,die Socken,7
+los zapatos,die Schuhe,7
+las botas,die Stiefel,7
+las zapatillas,die Turnschuhe,7
+el sombrero,der Hut,7
+la gorra,die Mütze,7
+los guantes,die Handschuhe,7
+la bufanda,der Schal,7
+el cinturón,der Gürtel,7
+el traje,der Anzug,7
+el pijama,der Schlafanzug,7
+el bañador,die Badehose,7
+blanco,weiß,7
+negro,schwarz,7
+rojo,rot,7
+azul,blau,7
+verde,grün,7
+amarillo,gelb,7
+naranja,orange,7
+rosa,rosa,7
+morado,lila,7
+marrón,braun,7
+gris,grau,7
+llevar,tragen,7
+ponerse,anziehen,7
+quitarse,ausziehen,7
+la ciudad,die Stadt,8
+el pueblo,das Dorf,8
+la calle,die Straße,8
+la plaza,der Platz,8
+el parque,der Park,8
+el edificio,das Gebäude,8
+la tienda,das Geschäft,8
+el supermercado,der Supermarkt,8
+el mercado,der Markt,8
+la panadería,die Bäckerei,8
+la carnicería,die Metzgerei,8
+el banco,die Bank,8
+la oficina,das Büro,8
+correos,die Post,8
+la estación,der Bahnhof,8
+el aeropuerto,der Flughafen,8
+el hotel,das Hotel,8
+el restaurante,das Restaurant,8
+el bar,die Bar,8
+el cine,das Kino,8
+el teatro,das Theater,8
+el museo,das Museum,8
+la biblioteca,die Bibliothek,8
+la iglesia,die Kirche,8
+el castillo,das Schloss,8
+el puente,die Brücke,8
+el río,der Fluss,8
+el lago,der See,8
+el mar,das Meer,8
+la playa,der Strand,8
+la montaña,der Berg,8
+el bosque,der Wald,8
+ir,gehen,8
+venir,kommen,8
+llegar,ankommen,8
+salir,ausgehen,8
+entrar,hineingehen,8
+el tiempo libre,die Freizeit,9
+el fútbol,der Fußball,9
+el baloncesto,der Basketball,9
+el tenis,das Tennis,9
+la natación,das Schwimmen,9
+el ciclismo,das Radfahren,9
+correr,laufen,9
+nadar,schwimmen,9
+montar en bicicleta,Fahrrad fahren,9
+jugar,spielen,9
+el partido,das Spiel,9
+el equipo,die Mannschaft,9
+el jugador,der Spieler,9
+el hobby,das Hobby,9
+cantar,singen,9
+bailar,tanzen,9
+tocar,spielen,9
+el instrumento,das Instrument,9
+la guitarra,die Gitarre,9
+el piano,das Klavier,9
+ver la televisión,fernsehen,9
+navegar por internet,im Internet surfen,9
+jugar a videojuegos,Videospiele spielen,9
+salir con amigos,mit Freunden ausgehen,9
+ir al cine,ins Kino gehen,9
+ir de compras,einkaufen gehen,9
+viajar,reisen,9
+el viaje,die Reise,9
+las vacaciones,die Ferien,9
+descansar,sich ausruhen,9
+divertirse,sich amüsieren,9

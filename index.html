@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vokabel-Quiz</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#003399;--green:#28a745;--red:#dc3545;--gray:#6c757d;--light:#f8f9fa;--border:#dee2e6}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;min-height:100vh}
+/* Profile bar */
+.p-bar{background:#1a1a2e;color:#fff;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;font-size:.85rem;position:relative}
+.p-bar strong{color:#7eb3ff}
+.p-bar-btn{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 10px;border-radius:6px;font-size:.78rem;cursor:pointer;transition:all .15s}
+.p-bar-btn:hover{background:rgba(255,255,255,.15)}
+.dropdown-wrap{position:relative}
+.dropdown-menu{position:absolute;right:0;top:calc(100% + 6px);background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.2);min-width:160px;overflow:hidden;z-index:200}
+.dropdown-item{padding:10px 14px;cursor:pointer;font-size:.85rem;color:#333;transition:background .1s}
+.dropdown-item:hover{background:var(--light)}
+.dropdown-item.active{color:var(--blue);font-weight:600}
+.dropdown-item.new{color:var(--blue);border-top:1px solid var(--border)}
+.dropdown-new-input{padding:8px 14px;border-top:1px solid var(--border);display:flex;gap:6px}
+.dropdown-new-input input{flex:1;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.82rem;outline:none}
+.dropdown-new-input button{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:.78rem}
+/* Overlay */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
+.overlay-inner{background:#fff;border-radius:16px;padding:32px;max-width:440px;width:100%}
+.overlay-inner h2{font-size:1.4rem;color:#1a1a2e;margin-bottom:8px}
+.overlay-inner p{color:var(--gray);margin-bottom:20px;font-size:.9rem}
+.overlay-input{width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:1rem;outline:none;margin-bottom:12px}
+.overlay-input:focus{border-color:var(--blue)}
+.existing-profiles{margin-top:16px;border-top:1px solid var(--border);padding-top:14px}
+.existing-profiles p{font-size:.8rem;color:var(--gray);margin-bottom:8px}
+.profile-chips{display:flex;flex-wrap:wrap;gap:8px}
+.profile-chip{padding:6px 14px;border:2px solid var(--blue);border-radius:20px;color:var(--blue);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s}
+.profile-chip:hover{background:var(--blue);color:#fff}
+/* Main layout */
+.container{max-width:640px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:12px;padding:20px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+/* Header */
+.header-row1{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.header-row2{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+h1{font-size:1.2rem;font-weight:700;color:#1a1a2e}
+.mode-toggle{display:flex;background:var(--light);border-radius:10px;padding:4px;gap:4px}
+.mode-btn{padding:5px 11px;border:none;border-radius:7px;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--gray);background:transparent;transition:all .2s}
+.mode-btn.active{background:#fff;color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.set-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.set-select{padding:5px 10px;border:2px solid var(--border);border-radius:8px;font-size:.82rem;background:#fff;cursor:pointer;outline:none;color:#333;max-width:160px}
+.set-select:focus{border-color:var(--blue)}
+/* Buttons */
+.btn{padding:6px 12px;border:none;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn:hover{opacity:.9;transform:translateY(-1px)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-outline{background:#fff;border:2px solid var(--border);color:#333}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+.btn-big{font-size:1.05rem;padding:13px 32px}
+.btn-sm{padding:4px 9px;font-size:.78rem}
+/* Progress */
+.prog-info{display:flex;justify-content:space-between;font-size:.9rem;color:var(--gray);margin-bottom:8px}
+.prog-info strong{color:#1a1a2e}
+.prog-bg{background:var(--light);border-radius:6px;height:10px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),#0066cc);border-radius:6px;transition:width .5s}
+.stats{display:flex;gap:16px;margin-top:10px;font-size:.82rem;color:var(--gray);flex-wrap:wrap}
+.stat-val{font-weight:700;color:#1a1a2e}
+/* Unit filter */
+.unit-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.unit-toggle-arrow{color:var(--gray);font-size:.8rem;transition:transform .2s}
+.unit-toggle-arrow.open{transform:rotate(180deg)}
+.unit-panel{margin-top:14px}
+.unit-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.uchip{padding:5px 11px;border:2px solid var(--border);border-radius:20px;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;color:var(--gray);background:#fff}
+.uchip.on{border-color:var(--blue);background:var(--blue);color:#fff}
+.uchip.locked{opacity:.5;cursor:default}
+.unit-summary{font-size:.78rem;color:var(--gray)}
+.unit-actions{display:flex;gap:8px}
+/* Quiz */
+.quiz-card{min-height:280px}
+.q-label{font-size:.78rem;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.q-unit{font-size:.72rem;color:var(--gray);margin-bottom:12px}
+.dots{display:flex;gap:5px;margin-bottom:14px}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--border)}
+.dot.on{background:var(--green)}
+.q-word{font-size:1.9rem;font-weight:700;color:#1a1a2e;margin-bottom:26px;line-height:1.2}
+.ans-form{display:flex;gap:10px;margin-bottom:8px}
+.ans-input{flex:1;padding:11px 15px;border:2px solid var(--border);border-radius:10px;font-size:1rem;outline:none;transition:border-color .2s}
+.ans-input:focus{border-color:var(--blue)}
+.hint{font-size:.75rem;color:var(--gray);margin-top:5px}
+.p-label{font-size:.82rem;color:var(--gray);margin-bottom:12px}
+.p-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.p-btn{padding:13px 12px;border:2px solid var(--border);border-radius:10px;background:#fff;font-size:.92rem;font-weight:500;cursor:pointer;transition:all .15s;text-align:center}
+.p-btn:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:#f0f4ff}
+.p-btn.ok{border-color:var(--green);background:#f0fff4;color:var(--green)}
+.p-btn.fail{border-color:var(--red);background:#fff5f5;color:var(--red)}
+.p-btn:disabled{cursor:default}
+.fb{margin-top:18px;padding:11px 14px;border-radius:10px;font-size:.95rem;font-weight:600}
+.fb.ok{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.fb.fail{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.center{text-align:center}
+.c-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
+.c-stat{background:var(--light);border-radius:10px;padding:14px}
+.c-stat-v{font-size:1.7rem;font-weight:700;color:var(--blue)}
+.c-stat-l{font-size:.78rem;color:var(--gray)}
+/* Streak history */
+.history-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.history-header span{font-size:.85rem;color:var(--gray)}
+.history-header strong{color:#1a1a2e}
+.streak-list{display:flex;flex-wrap:wrap;gap:8px}
+.streak-badge{display:flex;flex-direction:column;align-items:center;padding:7px 11px;border-radius:10px;background:var(--light);min-width:52px}
+.streak-badge.best{background:#fff3cd;border:1px solid #ffc107}
+.streak-num{font-size:1.25rem;font-weight:700;color:var(--blue);line-height:1}
+.streak-date{font-size:.65rem;color:var(--gray);margin-top:2px}
+.streak-mode{font-size:.63rem;color:var(--gray)}
+.no-history{font-size:.82rem;color:var(--gray);font-style:italic}
+/* Save/load profile */
+.dropdown-divider{height:1px;background:var(--border);margin:4px 0}
+.dropdown-item.save{color:#28a745}
+.dropdown-item.load{color:var(--blue)}
+.dropdown-item.danger{color:var(--red)}
+.save-banner{background:#d4edda;border:1px solid #c3e6cb;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:.82rem;color:#155724;display:none}
+.load-link{display:block;text-align:center;margin-top:14px;font-size:.82rem;color:var(--blue);cursor:pointer;text-decoration:underline}
+/* Import modal fields */
+.import-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.import-field label{display:block;font-size:.75rem;color:var(--gray);margin-bottom:4px}
+.import-field input[type=text]{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;outline:none}
+.import-field input:focus{border-color:var(--blue)}
+.import-check{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:.88rem;color:#333}
+.import-preview{background:var(--light);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.82rem;color:var(--gray)}
+@media(max-width:480px){.container{padding:10px}.q-word{font-size:1.5rem}.p-grid{grid-template-columns:1fr}.header-row2{flex-direction:column;align-items:flex-start}}
+/* ── Streak milestone animation ── */
+#confettiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:500;opacity:0;transition:opacity .25s}
+#confettiCanvas.active{opacity:1}
+#milestoneBanner{position:fixed;top:50%;left:50%;transform:translate(-50%,-60%) scale(.5);z-index:600;text-align:center;pointer-events:none;opacity:0;transition:transform .38s cubic-bezier(.175,.885,.32,1.275),opacity .3s}
+#milestoneBanner.ms-show{transform:translate(-50%,-50%) scale(1);opacity:1}
+#milestoneBanner.ms-hide{transform:translate(-50%,-40%) scale(.5);opacity:0}
+.ms-inner{background:linear-gradient(145deg,#0d1b4b,#1a1a2e);border-radius:24px;padding:30px 48px;box-shadow:0 24px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08);color:#fff}
+.ms-fire{font-size:3.8rem;line-height:1;margin-bottom:6px;display:block;animation:ms-bounce .55s infinite alternate ease-in-out}
+.ms-num{font-size:3.5rem;font-weight:900;line-height:1;background:linear-gradient(90deg,#ffd700,#ff8c00,#ffd700);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:ms-shine 1.5s linear infinite}
+.ms-label{font-size:1.15rem;font-weight:700;color:#aac4ff;margin-top:6px;letter-spacing:.03em}
+.ms-sub{font-size:.82rem;color:#7eb3ff;margin-top:6px;opacity:.8}
+@keyframes ms-bounce{from{transform:scale(1) rotate(-4deg)}to{transform:scale(1.18) rotate(4deg)}}
+@keyframes ms-shine{0%{background-position:0%}100%{background-position:200%}}
+</style>
+</head>
+<body>
+
+<!-- Hidden file inputs -->
+<input type="file" id="profileLoadInput" accept=".json" style="display:none" onchange="handleProfileLoad(this)">
+
+<!-- Streak milestone overlay -->
+<canvas id="confettiCanvas"></canvas>
+<div id="milestoneBanner">
+  <div class="ms-inner">
+    <span class="ms-fire" id="msFire">🔥</span>
+    <div class="ms-num" id="msNum">10</div>
+    <div class="ms-label" id="msLabel">Streak!</div>
+    <div class="ms-sub" id="msSub">Weiter so!</div>
+  </div>
+</div>
+
+<!-- Profile bar -->
+<div class="p-bar" id="pBar">
+  <span>👤 <strong id="pbName">–</strong></span>
+  <div class="dropdown-wrap">
+    <button class="p-bar-btn" onclick="toggleProfileMenu()">Profil wechseln ▾</button>
+    <div class="dropdown-menu" id="profileMenu" style="display:none"></div>
+  </div>
+</div>
+
+<!-- Profile creation overlay -->
+<div class="overlay" id="profileOverlay">
+  <div class="overlay-inner">
+    <h2>👋 Willkommen!</h2>
+    <p>Erstelle dein Profil, um deinen Fortschritt zu speichern.</p>
+    <input class="overlay-input" id="newProfileInput" type="text" placeholder="Dein Name…" maxlength="30"
+      onkeydown="if(event.key==='Enter')submitNewProfile()">
+    <button class="btn btn-primary btn-big" style="width:100%" onclick="submitNewProfile()">Loslegen →</button>
+    <div id="existingProfilesList"></div>
+    <span class="load-link" onclick="loadProfileFromFile()">📂 Gespeicherten Spielstand laden</span>
+  </div>
+</div>
+
+<!-- CSV Import overlay -->
+<div class="overlay" id="importOverlay" style="display:none">
+  <div class="overlay-inner">
+    <h2>📂 Vokabular laden</h2>
+    <p>CSV-Datei mit den Spalten <code>Sprache A, Sprache B, Einheit</code> (erste Zeile = Spaltennamen).</p>
+    <input type="file" accept=".csv,.txt" id="csvFileInput" onchange="previewCSV(this)"
+      style="margin-bottom:14px;font-size:.85rem;width:100%">
+    <div id="importPreview" style="display:none">
+      <div class="import-preview" id="importStats"></div>
+      <div class="import-grid">
+        <div class="import-field">
+          <label>Name des Sets</label>
+          <input type="text" id="importName" placeholder="z.B. Latein">
+        </div>
+        <div class="import-field" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <label>Flag A</label>
+            <input type="text" id="importFlagA" placeholder="🏛️" maxlength="4" style="text-align:center">
+          </div>
+          <div>
+            <label>Flag B</label>
+            <input type="text" id="importFlagB" placeholder="🇩🇪" maxlength="4" style="text-align:center">
+          </div>
+        </div>
+      </div>
+      <label class="import-check">
+        <input type="checkbox" id="importStripB" checked>
+        Artikel in Zielsprache (B) optional (z.B. Deutsch)
+      </label>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="doImport()">Importieren</button>
+    </div>
+    <button class="btn btn-outline" style="width:100%" onclick="closeImport()">Abbrechen</button>
+  </div>
+</div>
+
+<!-- Main app -->
+<div class="container">
+
+<!-- Header -->
+<div class="card">
+  <div class="header-row1">
+    <h1 id="appTitle">📖 Vokabel-Quiz</h1>
+    <div class="mode-toggle" id="modeToggle">
+      <button class="mode-btn active" id="btnAB" onclick="setMode('a-b')">A → B</button>
+      <button class="mode-btn" id="btnBA" onclick="setMode('b-a')">B → A</button>
+    </div>
+  </div>
+  <div class="header-row2">
+    <div class="set-row">
+      <select class="set-select" id="setSelect" onchange="switchSet(this.value)"></select>
+      <button class="btn btn-outline btn-sm" onclick="openImport()">+ Laden</button>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="exportDone()" title="Erledigte exportieren">⬇ Export</button>
+      <button class="btn btn-outline btn-sm" onclick="resetProgress()" title="Zurücksetzen">↺ Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- Progress -->
+<div class="card">
+  <div class="prog-info">
+    <span>Fortschritt</span>
+    <span><strong id="pDone">0</strong> / <strong id="pTotal">0</strong> erledigt</span>
+  </div>
+  <div class="prog-bg"><div class="prog-fill" id="pFill" style="width:0%"></div></div>
+  <div class="stats">
+    <span>🔥 Streak: <span class="stat-val" id="sStreak">0</span></span>
+    <span>✓ Richtig: <span class="stat-val" id="sCorrect">0</span></span>
+    <span>📚 Offen: <span class="stat-val" id="sPool">0</span></span>
+  </div>
+</div>
+
+<!-- Unit filter -->
+<div class="card" id="unitCard">
+  <div class="unit-header" onclick="toggleUnitPanel()">
+    <span style="font-weight:600;color:#1a1a2e">📚 Einheiten</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="unit-summary" id="unitSummary">Alle</span>
+      <span class="unit-toggle-arrow" id="unitArrow">▼</span>
+    </div>
+  </div>
+  <div class="unit-panel" id="unitPanel" style="display:none">
+    <div class="unit-chips" id="unitChips"></div>
+    <div class="unit-actions">
+      <button class="btn btn-outline btn-sm" onclick="selectAllUnits()">Alle</button>
+      <button class="btn btn-outline btn-sm" onclick="selectNoUnits()">Keine</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quiz -->
+<div class="card quiz-card" id="quizCard"></div>
+
+<!-- Streak history -->
+<div class="card">
+  <div class="history-header">
+    <strong>🔥 Streak-Verlauf</strong>
+    <span id="historyBest"></span>
+  </div>
+  <div class="streak-list" id="historyList"><span class="no-history">Noch keine Sessions.</span></div>
+</div>
+
+</div><!-- /container -->
+<script>
+// ═══════════════════════════════════════════════════════════
+// BUILT-IN VOCABULARY SET (Spanish → German)
+// ═══════════════════════════════════════════════════════════
+const BUILTIN_SET={
+  id:'es-de',name:'Spanisch',langA:'Spanisch',langB:'Deutsch',
+  flagA:'🇪🇸',flagB:'🇩🇪',stripArticlesOnB:true,stripArticlesOnA:false,
+  vocab:[
+{id:1,a:"hola",b:"hallo",u:"0"},
+{id:2,a:"adiós",b:"auf Wiedersehen",u:"0"},
+{id:3,a:"buenos días",b:"guten Morgen",u:"0"},
+{id:4,a:"buenas tardes",b:"guten Tag",u:"0"},
+{id:5,a:"buenas noches",b:"gute Nacht",u:"0"},
+{id:6,a:"¿qué tal?",b:"wie geht's?",u:"0"},
+{id:7,a:"bien",b:"gut",u:"0"},
+{id:8,a:"mal",b:"schlecht",u:"0"},
+{id:9,a:"regular",b:"es geht",u:"0"},
+{id:10,a:"gracias",b:"danke",u:"0"},
+{id:11,a:"de nada",b:"bitte",u:"0"},
+{id:12,a:"por favor",b:"bitte sehr",u:"0"},
+{id:13,a:"perdón",b:"Entschuldigung",u:"0"},
+{id:14,a:"lo siento",b:"es tut mir leid",u:"0"},
+{id:15,a:"sí",b:"ja",u:"0"},
+{id:16,a:"no",b:"nein",u:"0"},
+{id:17,a:"mucho gusto",b:"sehr erfreut",u:"0"},
+{id:18,a:"encantado",b:"angenehm",u:"0"},
+{id:19,a:"el amigo",b:"der Freund",u:"1"},
+{id:20,a:"la amiga",b:"die Freundin",u:"1"},
+{id:21,a:"el padre",b:"der Vater",u:"1"},
+{id:22,a:"la madre",b:"die Mutter",u:"1"},
+{id:23,a:"el hermano",b:"der Bruder",u:"1"},
+{id:24,a:"la hermana",b:"die Schwester",u:"1"},
+{id:25,a:"el abuelo",b:"der Großvater",u:"1"},
+{id:26,a:"la abuela",b:"die Großmutter",u:"1"},
+{id:27,a:"el tío",b:"der Onkel",u:"1"},
+{id:28,a:"la tía",b:"die Tante",u:"1"},
+{id:29,a:"el primo",b:"der Cousin",u:"1"},
+{id:30,a:"la prima",b:"die Cousine",u:"1"},
+{id:31,a:"el hijo",b:"der Sohn",u:"1"},
+{id:32,a:"la hija",b:"die Tochter",u:"1"},
+{id:33,a:"el nieto",b:"der Enkel",u:"1"},
+{id:34,a:"la nieta",b:"die Enkelin",u:"1"},
+{id:35,a:"el hombre",b:"der Mann",u:"1"},
+{id:36,a:"la mujer",b:"die Frau",u:"1"},
+{id:37,a:"el niño",b:"das Kind",u:"1"},
+{id:38,a:"el chico",b:"der Junge",u:"1"},
+{id:39,a:"la chica",b:"das Mädchen",u:"1"},
+{id:40,a:"el bebé",b:"das Baby",u:"1"},
+{id:41,a:"la familia",b:"die Familie",u:"1"},
+{id:42,a:"joven",b:"jung",u:"1"},
+{id:43,a:"viejo",b:"alt",u:"1"},
+{id:44,a:"alto",b:"groß",u:"1"},
+{id:45,a:"bajo",b:"klein",u:"1"},
+{id:46,a:"guapo",b:"hübsch",u:"1"},
+{id:47,a:"feo",b:"hässlich",u:"1"},
+{id:48,a:"simpático",b:"sympathisch",u:"1"},
+{id:49,a:"antipático",b:"unsympathisch",u:"1"},
+{id:50,a:"inteligente",b:"intelligent",u:"1"},
+{id:51,a:"tonto",b:"dumm",u:"1"},
+{id:52,a:"ser",b:"sein",u:"1"},
+{id:53,a:"tener",b:"haben",u:"1"},
+{id:54,a:"llamarse",b:"heißen",u:"1"},
+{id:55,a:"¿Cómo te llamas?",b:"Wie heißt du?",u:"1"},
+{id:56,a:"¿Cuántos años tienes?",b:"Wie alt bist du?",u:"1"},
+{id:57,a:"¿De dónde eres?",b:"Woher kommst du?",u:"1"},
+{id:58,a:"el libro",b:"das Buch",u:"2"},
+{id:59,a:"el cuaderno",b:"das Heft",u:"2"},
+{id:60,a:"el lápiz",b:"der Bleistift",u:"2"},
+{id:61,a:"el bolígrafo",b:"der Kugelschreiber",u:"2"},
+{id:62,a:"la pluma",b:"der Füller",u:"2"},
+{id:63,a:"la goma",b:"der Radiergummi",u:"2"},
+{id:64,a:"la regla",b:"das Lineal",u:"2"},
+{id:65,a:"las tijeras",b:"die Schere",u:"2"},
+{id:66,a:"la mochila",b:"der Rucksack",u:"2"},
+{id:67,a:"el estuche",b:"das Federmäppchen",u:"2"},
+{id:68,a:"la carpeta",b:"der Ordner",u:"2"},
+{id:69,a:"el papel",b:"das Papier",u:"2"},
+{id:70,a:"el diccionario",b:"das Wörterbuch",u:"2"},
+{id:71,a:"la pizarra",b:"die Tafel",u:"2"},
+{id:72,a:"la tiza",b:"die Kreide",u:"2"},
+{id:73,a:"el rotulador",b:"der Filzstift",u:"2"},
+{id:74,a:"el escritorio",b:"der Schreibtisch",u:"2"},
+{id:75,a:"la silla",b:"der Stuhl",u:"2"},
+{id:76,a:"la mesa",b:"der Tisch",u:"2"},
+{id:77,a:"la ventana",b:"das Fenster",u:"2"},
+{id:78,a:"la puerta",b:"die Tür",u:"2"},
+{id:79,a:"el reloj",b:"die Uhr",u:"2"},
+{id:80,a:"el ordenador",b:"der Computer",u:"2"},
+{id:81,a:"la clase",b:"die Klasse",u:"2"},
+{id:82,a:"el aula",b:"das Klassenzimmer",u:"2"},
+{id:83,a:"el colegio",b:"die Schule",u:"2"},
+{id:84,a:"la universidad",b:"die Universität",u:"2"},
+{id:85,a:"las matemáticas",b:"die Mathematik",u:"2"},
+{id:86,a:"la historia",b:"die Geschichte",u:"2"},
+{id:87,a:"la geografía",b:"die Erdkunde",u:"2"},
+{id:88,a:"las ciencias",b:"die Naturwissenschaften",u:"2"},
+{id:89,a:"la física",b:"die Physik",u:"2"},
+{id:90,a:"la química",b:"die Chemie",u:"2"},
+{id:91,a:"la biología",b:"die Biologie",u:"2"},
+{id:92,a:"la música",b:"die Musik",u:"2"},
+{id:93,a:"el arte",b:"die Kunst",u:"2"},
+{id:94,a:"la educación física",b:"der Sport",u:"2"},
+{id:95,a:"el recreo",b:"die Pause",u:"2"},
+{id:96,a:"el examen",b:"die Prüfung",u:"2"},
+{id:97,a:"la nota",b:"die Note",u:"2"},
+{id:98,a:"estudiar",b:"lernen",u:"2"},
+{id:99,a:"aprender",b:"lernen",u:"2"},
+{id:100,a:"enseñar",b:"lehren",u:"2"},
+{id:101,a:"leer",b:"lesen",u:"2"},
+{id:102,a:"escribir",b:"schreiben",u:"2"},
+{id:103,a:"hablar",b:"sprechen",u:"2"},
+{id:104,a:"escuchar",b:"hören",u:"2"},
+{id:105,a:"preguntar",b:"fragen",u:"2"},
+{id:106,a:"responder",b:"antworten",u:"2"},
+{id:107,a:"la casa",b:"das Haus",u:"3"},
+{id:108,a:"el piso",b:"die Wohnung",u:"3"},
+{id:109,a:"la habitación",b:"das Zimmer",u:"3"},
+{id:110,a:"el dormitorio",b:"das Schlafzimmer",u:"3"},
+{id:111,a:"el salón",b:"das Wohnzimmer",u:"3"},
+{id:112,a:"la cocina",b:"die Küche",u:"3"},
+{id:113,a:"el baño",b:"das Badezimmer",u:"3"},
+{id:114,a:"el comedor",b:"das Esszimmer",u:"3"},
+{id:115,a:"el pasillo",b:"der Flur",u:"3"},
+{id:116,a:"el garaje",b:"die Garage",u:"3"},
+{id:117,a:"el jardín",b:"der Garten",u:"3"},
+{id:118,a:"el balcón",b:"der Balkon",u:"3"},
+{id:119,a:"la terraza",b:"die Terrasse",u:"3"},
+{id:120,a:"el suelo",b:"der Boden",u:"3"},
+{id:121,a:"la pared",b:"die Wand",u:"3"},
+{id:122,a:"la escalera",b:"die Treppe",u:"3"},
+{id:123,a:"el ascensor",b:"der Aufzug",u:"3"},
+{id:124,a:"la cama",b:"das Bett",u:"3"},
+{id:125,a:"el armario",b:"der Schrank",u:"3"},
+{id:126,a:"la estantería",b:"das Regal",u:"3"},
+{id:127,a:"el sofá",b:"das Sofa",u:"3"},
+{id:128,a:"el sillón",b:"der Sessel",u:"3"},
+{id:129,a:"la lámpara",b:"die Lampe",u:"3"},
+{id:130,a:"la alfombra",b:"der Teppich",u:"3"},
+{id:131,a:"el espejo",b:"der Spiegel",u:"3"},
+{id:132,a:"la televisión",b:"der Fernseher",u:"3"},
+{id:133,a:"el frigorífico",b:"der Kühlschrank",u:"3"},
+{id:134,a:"el horno",b:"der Ofen",u:"3"},
+{id:135,a:"el microondas",b:"die Mikrowelle",u:"3"},
+{id:136,a:"la lavadora",b:"die Waschmaschine",u:"3"},
+{id:137,a:"la ducha",b:"die Dusche",u:"3"},
+{id:138,a:"la bañera",b:"die Badewanne",u:"3"},
+{id:139,a:"el lavabo",b:"das Waschbecken",u:"3"},
+{id:140,a:"el inodoro",b:"die Toilette",u:"3"},
+{id:141,a:"vivir",b:"wohnen",u:"3"},
+{id:142,a:"mudarse",b:"umziehen",u:"3"},
+{id:143,a:"limpiar",b:"putzen",u:"3"},
+{id:144,a:"ordenar",b:"aufräumen",u:"3"},
+{id:145,a:"cocinar",b:"kochen",u:"3"},
+{id:146,a:"el lunes",b:"der Montag",u:"4"},
+{id:147,a:"el martes",b:"der Dienstag",u:"4"},
+{id:148,a:"el miércoles",b:"der Mittwoch",u:"4"},
+{id:149,a:"el jueves",b:"der Donnerstag",u:"4"},
+{id:150,a:"el viernes",b:"der Freitag",u:"4"},
+{id:151,a:"el sábado",b:"der Samstag",u:"4"},
+{id:152,a:"el domingo",b:"der Sonntag",u:"4"},
+{id:153,a:"la semana",b:"die Woche",u:"4"},
+{id:154,a:"el fin de semana",b:"das Wochenende",u:"4"},
+{id:155,a:"hoy",b:"heute",u:"4"},
+{id:156,a:"ayer",b:"gestern",u:"4"},
+{id:157,a:"mañana",b:"morgen",u:"4"},
+{id:158,a:"enero",b:"Januar",u:"4"},
+{id:159,a:"febrero",b:"Februar",u:"4"},
+{id:160,a:"marzo",b:"März",u:"4"},
+{id:161,a:"abril",b:"April",u:"4"},
+{id:162,a:"mayo",b:"Mai",u:"4"},
+{id:163,a:"junio",b:"Juni",u:"4"},
+{id:164,a:"julio",b:"Juli",u:"4"},
+{id:165,a:"agosto",b:"August",u:"4"},
+{id:166,a:"septiembre",b:"September",u:"4"},
+{id:167,a:"octubre",b:"Oktober",u:"4"},
+{id:168,a:"noviembre",b:"November",u:"4"},
+{id:169,a:"diciembre",b:"Dezember",u:"4"},
+{id:170,a:"el mes",b:"der Monat",u:"4"},
+{id:171,a:"el año",b:"das Jahr",u:"4"},
+{id:172,a:"la fecha",b:"das Datum",u:"4"},
+{id:173,a:"el día",b:"der Tag",u:"4"},
+{id:174,a:"la primavera",b:"der Frühling",u:"4"},
+{id:175,a:"el verano",b:"der Sommer",u:"4"},
+{id:176,a:"el otoño",b:"der Herbst",u:"4"},
+{id:177,a:"el invierno",b:"der Winter",u:"4"},
+{id:178,a:"la hora",b:"die Uhrzeit",u:"4"},
+{id:179,a:"el minuto",b:"die Minute",u:"4"},
+{id:180,a:"la mañana",b:"der Morgen",u:"4"},
+{id:181,a:"la tarde",b:"der Nachmittag",u:"4"},
+{id:182,a:"la noche",b:"die Nacht",u:"4"},
+{id:183,a:"medianoche",b:"Mitternacht",u:"4"},
+{id:184,a:"mediodía",b:"Mittag",u:"4"},
+{id:185,a:"el desayuno",b:"das Frühstück",u:"5"},
+{id:186,a:"el almuerzo",b:"das Mittagessen",u:"5"},
+{id:187,a:"la cena",b:"das Abendessen",u:"5"},
+{id:188,a:"el agua",b:"das Wasser",u:"5"},
+{id:189,a:"el zumo",b:"der Saft",u:"5"},
+{id:190,a:"el café",b:"der Kaffee",u:"5"},
+{id:191,a:"el té",b:"der Tee",u:"5"},
+{id:192,a:"la leche",b:"die Milch",u:"5"},
+{id:193,a:"el refresco",b:"die Limonade",u:"5"},
+{id:194,a:"el vino",b:"der Wein",u:"5"},
+{id:195,a:"la cerveza",b:"das Bier",u:"5"},
+{id:196,a:"el pan",b:"das Brot",u:"5"},
+{id:197,a:"el bocadillo",b:"das Sandwich",u:"5"},
+{id:198,a:"la tostada",b:"der Toast",u:"5"},
+{id:199,a:"la mantequilla",b:"die Butter",u:"5"},
+{id:200,a:"la mermelada",b:"die Marmelade",u:"5"},
+{id:201,a:"el queso",b:"der Käse",u:"5"},
+{id:202,a:"el jamón",b:"der Schinken",u:"5"},
+{id:203,a:"el huevo",b:"das Ei",u:"5"},
+{id:204,a:"la carne",b:"das Fleisch",u:"5"},
+{id:205,a:"el pollo",b:"das Hähnchen",u:"5"},
+{id:206,a:"el pescado",b:"der Fisch",u:"5"},
+{id:207,a:"el arroz",b:"der Reis",u:"5"},
+{id:208,a:"la pasta",b:"die Nudeln",u:"5"},
+{id:209,a:"la patata",b:"die Kartoffel",u:"5"},
+{id:210,a:"la verdura",b:"das Gemüse",u:"5"},
+{id:211,a:"la ensalada",b:"der Salat",u:"5"},
+{id:212,a:"la lechuga",b:"die Salatblätter",u:"5"},
+{id:213,a:"el tomate",b:"die Tomate",u:"5"},
+{id:214,a:"la zanahoria",b:"die Karotte",u:"5"},
+{id:215,a:"la cebolla",b:"die Zwiebel",u:"5"},
+{id:216,a:"la fruta",b:"das Obst",u:"5"},
+{id:217,a:"la manzana",b:"der Apfel",u:"5"},
+{id:218,a:"la naranja",b:"die Orange",u:"5"},
+{id:219,a:"el plátano",b:"die Banane",u:"5"},
+{id:220,a:"la pera",b:"die Birne",u:"5"},
+{id:221,a:"la fresa",b:"die Erdbeere",u:"5"},
+{id:222,a:"la uva",b:"die Traube",u:"5"},
+{id:223,a:"el postre",b:"der Nachtisch",u:"5"},
+{id:224,a:"el helado",b:"das Eis",u:"5"},
+{id:225,a:"el pastel",b:"der Kuchen",u:"5"},
+{id:226,a:"la tarta",b:"die Torte",u:"5"},
+{id:227,a:"el chocolate",b:"die Schokolade",u:"5"},
+{id:228,a:"el azúcar",b:"der Zucker",u:"5"},
+{id:229,a:"la sal",b:"das Salz",u:"5"},
+{id:230,a:"tener hambre",b:"Hunger haben",u:"5"},
+{id:231,a:"tener sed",b:"Durst haben",u:"5"},
+{id:232,a:"comer",b:"essen",u:"5"},
+{id:233,a:"beber",b:"trinken",u:"5"},
+{id:234,a:"desayunar",b:"frühstücken",u:"5"},
+{id:235,a:"almorzar",b:"zu Mittag essen",u:"5"},
+{id:236,a:"cenar",b:"zu Abend essen",u:"5"},
+{id:237,a:"el cuerpo",b:"der Körper",u:"6"},
+{id:238,a:"la cabeza",b:"der Kopf",u:"6"},
+{id:239,a:"el pelo",b:"das Haar",u:"6"},
+{id:240,a:"la cara",b:"das Gesicht",u:"6"},
+{id:241,a:"los ojos",b:"die Augen",u:"6"},
+{id:242,a:"la nariz",b:"die Nase",u:"6"},
+{id:243,a:"la boca",b:"der Mund",u:"6"},
+{id:244,a:"la oreja",b:"das Ohr",u:"6"},
+{id:245,a:"el diente",b:"der Zahn",u:"6"},
+{id:246,a:"el cuello",b:"der Hals",u:"6"},
+{id:247,a:"el hombro",b:"die Schulter",u:"6"},
+{id:248,a:"el brazo",b:"der Arm",u:"6"},
+{id:249,a:"el codo",b:"der Ellbogen",u:"6"},
+{id:250,a:"la mano",b:"die Hand",u:"6"},
+{id:251,a:"el dedo",b:"der Finger",u:"6"},
+{id:252,a:"la pierna",b:"das Bein",u:"6"},
+{id:253,a:"la rodilla",b:"das Knie",u:"6"},
+{id:254,a:"el pie",b:"der Fuß",u:"6"},
+{id:255,a:"el estómago",b:"der Bauch",u:"6"},
+{id:256,a:"la espalda",b:"der Rücken",u:"6"},
+{id:257,a:"el corazón",b:"das Herz",u:"6"},
+{id:258,a:"enfermo",b:"krank",u:"6"},
+{id:259,a:"sano",b:"gesund",u:"6"},
+{id:260,a:"el dolor",b:"der Schmerz",u:"6"},
+{id:261,a:"la enfermedad",b:"die Krankheit",u:"6"},
+{id:262,a:"el resfriado",b:"die Erkältung",u:"6"},
+{id:263,a:"la gripe",b:"die Grippe",u:"6"},
+{id:264,a:"la fiebre",b:"das Fieber",u:"6"},
+{id:265,a:"la tos",b:"der Husten",u:"6"},
+{id:266,a:"el médico",b:"der Arzt",u:"6"},
+{id:267,a:"la médica",b:"die Ärztin",u:"6"},
+{id:268,a:"el hospital",b:"das Krankenhaus",u:"6"},
+{id:269,a:"la farmacia",b:"die Apotheke",u:"6"},
+{id:270,a:"la medicina",b:"das Medikament",u:"6"},
+{id:271,a:"doler",b:"wehtun",u:"6"},
+{id:272,a:"tener fiebre",b:"Fieber haben",u:"6"},
+{id:273,a:"tener tos",b:"Husten haben",u:"6"},
+{id:274,a:"la ropa",b:"die Kleidung",u:"7"},
+{id:275,a:"la camisa",b:"das Hemd",u:"7"},
+{id:276,a:"la camiseta",b:"das T-Shirt",u:"7"},
+{id:277,a:"el pantalón",b:"die Hose",u:"7"},
+{id:278,a:"los vaqueros",b:"die Jeans",u:"7"},
+{id:279,a:"la falda",b:"der Rock",u:"7"},
+{id:280,a:"el vestido",b:"das Kleid",u:"7"},
+{id:281,a:"la chaqueta",b:"die Jacke",u:"7"},
+{id:282,a:"el abrigo",b:"der Mantel",u:"7"},
+{id:283,a:"el jersey",b:"der Pullover",u:"7"},
+{id:284,a:"la sudadera",b:"das Sweatshirt",u:"7"},
+{id:285,a:"los calcetines",b:"die Socken",u:"7"},
+{id:286,a:"los zapatos",b:"die Schuhe",u:"7"},
+{id:287,a:"las botas",b:"die Stiefel",u:"7"},
+{id:288,a:"las zapatillas",b:"die Turnschuhe",u:"7"},
+{id:289,a:"el sombrero",b:"der Hut",u:"7"},
+{id:290,a:"la gorra",b:"die Mütze",u:"7"},
+{id:291,a:"los guantes",b:"die Handschuhe",u:"7"},
+{id:292,a:"la bufanda",b:"der Schal",u:"7"},
+{id:293,a:"el cinturón",b:"der Gürtel",u:"7"},
+{id:294,a:"el traje",b:"der Anzug",u:"7"},
+{id:295,a:"el pijama",b:"der Schlafanzug",u:"7"},
+{id:296,a:"el bañador",b:"die Badehose",u:"7"},
+{id:297,a:"blanco",b:"weiß",u:"7"},
+{id:298,a:"negro",b:"schwarz",u:"7"},
+{id:299,a:"rojo",b:"rot",u:"7"},
+{id:300,a:"azul",b:"blau",u:"7"},
+{id:301,a:"verde",b:"grün",u:"7"},
+{id:302,a:"amarillo",b:"gelb",u:"7"},
+{id:303,a:"naranja",b:"orange",u:"7"},
+{id:304,a:"rosa",b:"rosa",u:"7"},
+{id:305,a:"morado",b:"lila",u:"7"},
+{id:306,a:"marrón",b:"braun",u:"7"},
+{id:307,a:"gris",b:"grau",u:"7"},
+{id:308,a:"llevar",b:"tragen",u:"7"},
+{id:309,a:"ponerse",b:"anziehen",u:"7"},
+{id:310,a:"quitarse",b:"ausziehen",u:"7"},
+{id:311,a:"la ciudad",b:"die Stadt",u:"8"},
+{id:312,a:"el pueblo",b:"das Dorf",u:"8"},
+{id:313,a:"la calle",b:"die Straße",u:"8"},
+{id:314,a:"la plaza",b:"der Platz",u:"8"},
+{id:315,a:"el parque",b:"der Park",u:"8"},
+{id:316,a:"el edificio",b:"das Gebäude",u:"8"},
+{id:317,a:"la tienda",b:"das Geschäft",u:"8"},
+{id:318,a:"el supermercado",b:"der Supermarkt",u:"8"},
+{id:319,a:"el mercado",b:"der Markt",u:"8"},
+{id:320,a:"la panadería",b:"die Bäckerei",u:"8"},
+{id:321,a:"la carnicería",b:"die Metzgerei",u:"8"},
+{id:322,a:"el banco",b:"die Bank",u:"8"},
+{id:323,a:"la oficina",b:"das Büro",u:"8"},
+{id:324,a:"correos",b:"die Post",u:"8"},
+{id:325,a:"la estación",b:"der Bahnhof",u:"8"},
+{id:326,a:"el aeropuerto",b:"der Flughafen",u:"8"},
+{id:327,a:"el hotel",b:"das Hotel",u:"8"},
+{id:328,a:"el restaurante",b:"das Restaurant",u:"8"},
+{id:329,a:"el bar",b:"die Bar",u:"8"},
+{id:330,a:"el cine",b:"das Kino",u:"8"},
+{id:331,a:"el teatro",b:"das Theater",u:"8"},
+{id:332,a:"el museo",b:"das Museum",u:"8"},
+{id:333,a:"la biblioteca",b:"die Bibliothek",u:"8"},
+{id:334,a:"la iglesia",b:"die Kirche",u:"8"},
+{id:335,a:"el castillo",b:"das Schloss",u:"8"},
+{id:336,a:"el puente",b:"die Brücke",u:"8"},
+{id:337,a:"el río",b:"der Fluss",u:"8"},
+{id:338,a:"el lago",b:"der See",u:"8"},
+{id:339,a:"el mar",b:"das Meer",u:"8"},
+{id:340,a:"la playa",b:"der Strand",u:"8"},
+{id:341,a:"la montaña",b:"der Berg",u:"8"},
+{id:342,a:"el bosque",b:"der Wald",u:"8"},
+{id:343,a:"ir",b:"gehen",u:"8"},
+{id:344,a:"venir",b:"kommen",u:"8"},
+{id:345,a:"llegar",b:"ankommen",u:"8"},
+{id:346,a:"salir",b:"ausgehen",u:"8"},
+{id:347,a:"entrar",b:"hineingehen",u:"8"},
+{id:348,a:"el tiempo libre",b:"die Freizeit",u:"9"},
+{id:349,a:"el fútbol",b:"der Fußball",u:"9"},
+{id:350,a:"el baloncesto",b:"der Basketball",u:"9"},
+{id:351,a:"el tenis",b:"das Tennis",u:"9"},
+{id:352,a:"la natación",b:"das Schwimmen",u:"9"},
+{id:353,a:"el ciclismo",b:"das Radfahren",u:"9"},
+{id:354,a:"correr",b:"laufen",u:"9"},
+{id:355,a:"nadar",b:"schwimmen",u:"9"},
+{id:356,a:"montar en bicicleta",b:"Fahrrad fahren",u:"9"},
+{id:357,a:"jugar",b:"spielen",u:"9"},
+{id:358,a:"el partido",b:"das Spiel",u:"9"},
+{id:359,a:"el equipo",b:"die Mannschaft",u:"9"},
+{id:360,a:"el jugador",b:"der Spieler",u:"9"},
+{id:361,a:"el hobby",b:"das Hobby",u:"9"},
+{id:362,a:"cantar",b:"singen",u:"9"},
+{id:363,a:"bailar",b:"tanzen",u:"9"},
+{id:364,a:"tocar",b:"spielen",u:"9"},
+{id:365,a:"el instrumento",b:"das Instrument",u:"9"},
+{id:366,a:"la guitarra",b:"die Gitarre",u:"9"},
+{id:367,a:"el piano",b:"das Klavier",u:"9"},
+{id:368,a:"ver la televisión",b:"fernsehen",u:"9"},
+{id:369,a:"navegar por internet",b:"im Internet surfen",u:"9"},
+{id:370,a:"jugar a videojuegos",b:"Videospiele spielen",u:"9"},
+{id:371,a:"salir con amigos",b:"mit Freunden ausgehen",u:"9"},
+{id:372,a:"ir al cine",b:"ins Kino gehen",u:"9"},
+{id:373,a:"ir de compras",b:"einkaufen gehen",u:"9"},
+{id:374,a:"viajar",b:"reisen",u:"9"},
+{id:375,a:"el viaje",b:"die Reise",u:"9"},
+{id:376,a:"las vacaciones",b:"die Ferien",u:"9"},
+{id:377,a:"descansar",b:"sich ausruhen",u:"9"},
+{id:378,a:"divertirse",b:"sich amüsieren",u:"9"},
+]};
+
+// ═══════════════════════════════════════════════════════════
+// PROFILE & SET STATE
+// ═══════════════════════════════════════════════════════════
+let activeProfile='';
+let profiles=[];
+let activeSetId='es-de';
+let customSets=[];
+
+function getActiveSet(){
+  if(activeSetId==='es-de')return BUILTIN_SET;
+  return customSets.find(s=>s.id===activeSetId)||BUILTIN_SET;
+}
+function getAllSets(){return[BUILTIN_SET,...customSets];}
+function getAllUnits(){return[...new Set(getActiveSet().vocab.map(v=>v.u))].sort((a,b)=>+a-+b);}
+
+// ═══════════════════════════════════════════════════════════
+// QUIZ STATE
+// ═══════════════════════════════════════════════════════════
+let mode='a-b';
+let pool=[],cur=null,counts={},doneSet=new Set();
+let sesCorrect=0,streak=0,sesMaxStreak=0;
+let phase='start',proposals=[],lastMsg='';
+let activeUnits=new Set();
+let streakHistory=[];
+let unitPanelOpen=false;
+
+// ═══════════════════════════════════════════════════════════
+// STORAGE  (all keys namespaced by profile + set)
+// ═══════════════════════════════════════════════════════════
+function pfx(k){return`${activeProfile}:${activeSetId}:${k}`;}
+function pfxP(k){return`${activeProfile}:${k}`;}
+
+function save(){
+  localStorage.setItem(pfx('d'),JSON.stringify([...doneSet]));
+  localStorage.setItem(pfx('c'),JSON.stringify(counts));
+  localStorage.setItem(pfx('m'),mode);
+  localStorage.setItem(pfx('u'),JSON.stringify([...activeUnits]));
+  localStorage.setItem(pfxP('lang'),activeSetId);
+}
+
+function load(){
+  try{
+    doneSet=new Set(JSON.parse(localStorage.getItem(pfx('d'))||'[]'));
+    counts=JSON.parse(localStorage.getItem(pfx('c'))||'{}');
+    mode=localStorage.getItem(pfx('m'))||'a-b';
+    const su=localStorage.getItem(pfx('u'));
+    activeUnits=su?new Set(JSON.parse(su)):new Set(getAllUnits());
+    streakHistory=JSON.parse(localStorage.getItem(pfxP('h'))||'[]');
+  }catch(e){
+    doneSet=new Set();counts={};mode='a-b';
+    activeUnits=new Set(getAllUnits());streakHistory=[];
+  }
+}
+
+function saveStreakEntry(){
+  if(sesMaxStreak===0)return;
+  const d=new Date();
+  const date=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getFullYear()).slice(2);
+  streakHistory.push({max:sesMaxStreak,date,mode,set:activeSetId,setName:getActiveSet().name});
+  if(streakHistory.length>20)streakHistory=streakHistory.slice(-20);
+  localStorage.setItem(pfxP('h'),JSON.stringify(streakHistory));
+  sesMaxStreak=0;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROFILE MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+function loadProfiles(){
+  try{
+    profiles=JSON.parse(localStorage.getItem('sq_profiles')||'[]');
+    activeProfile=localStorage.getItem('sq_active')||'';
+    if(activeProfile){
+      activeSetId=localStorage.getItem(pfxP('lang'))||'es-de';
+      customSets=JSON.parse(localStorage.getItem(pfxP('sets'))||'[]');
+    }
+  }catch(e){profiles=[];activeProfile='';}
+}
+
+function saveProfiles(){
+  localStorage.setItem('sq_profiles',JSON.stringify(profiles));
+  if(activeProfile){
+    localStorage.setItem('sq_active',activeProfile);
+    localStorage.setItem(pfxP('sets'),JSON.stringify(customSets));
+  }
+}
+
+function switchProfile(name){
+  if(name===activeProfile)return;
+  saveStreakEntry();
+  activeProfile=name;
+  localStorage.setItem('sq_active',name);
+  activeSetId=localStorage.getItem(pfxP('lang'))||'es-de';
+  customSets=JSON.parse(localStorage.getItem(pfxP('sets'))||'[]');
+  sesCorrect=0;streak=0;sesMaxStreak=0;phase='start';pool=[];cur=null;
+  load();buildPool();
+  renderAll();
+  closeMenu();
+}
+
+function createProfile(name){
+  name=name.trim();
+  if(!name)return;
+  if(!profiles.includes(name))profiles.push(name);
+  localStorage.setItem('sq_profiles',JSON.stringify(profiles));
+  switchProfile(name);
+  hideProfileOverlay();
+}
+
+function submitNewProfile(){
+  const inp=document.getElementById('newProfileInput');
+  if(inp)createProfile(inp.value);
+}
+
+function toggleProfileMenu(){
+  const m=document.getElementById('profileMenu');
+  if(!m)return;
+  const open=m.style.display==='none'||!m.style.display;
+  m.style.display=open?'block':'none';
+  if(open)renderProfileMenu();
+}
+
+function closeMenu(){
+  const m=document.getElementById('profileMenu');
+  if(m)m.style.display='none';
+}
+
+function renderProfileMenu(){
+  const m=document.getElementById('profileMenu');
+  if(!m)return;
+  let html=profiles.map(p=>`<div class="dropdown-item${p===activeProfile?' active':''}" onclick="switchProfile('${esc(p)}')">${esc(p)}${p===activeProfile?' ✓':''}</div>`).join('');
+  html+=`<div class="dropdown-new-input">
+    <input type="text" id="menuNewName" placeholder="Neues Profil…" maxlength="30" onkeydown="if(event.key==='Enter')submitMenuProfile()">
+    <button onclick="submitMenuProfile()">+</button>
+  </div>`;
+  html+=`<div class="dropdown-divider"></div>
+  <div class="dropdown-item save" onclick="saveProfileToFile()">💾 Spielstand speichern</div>
+  <div class="dropdown-item load" onclick="loadProfileFromFile()">📂 Spielstand laden</div>
+  <div class="dropdown-divider"></div>
+  <div class="dropdown-item danger" onclick="resetAllProgress()">↺ Alles zurücksetzen</div>`;
+  m.innerHTML=html;
+  const inp=document.getElementById('menuNewName');
+  if(inp)inp.focus();
+}
+
+function submitMenuProfile(){
+  const inp=document.getElementById('menuNewName');
+  if(inp&&inp.value.trim())createProfile(inp.value);
+}
+
+// ─── Save / Load profile state ─────────────────────────────
+function saveProfileToFile(){
+  if(!activeProfile){alert('Kein aktives Profil.');return;}
+  saveStreakEntry();save();
+  const state={};
+  const prefix=activeProfile+':';
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith(prefix))state[k]=localStorage.getItem(k);
+  }
+  // include global profile list so the name is preserved on import
+  state['sq_profiles']=localStorage.getItem('sq_profiles')||'[]';
+  const d=new Date();
+  const dateStr=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getFullYear()).slice(2);
+  const payload=JSON.stringify({version:1,profile:activeProfile,exported:dateStr,state},null,2);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([payload],{type:'application/json'}));
+  a.download=`${activeProfile}_spielstand.json`;
+  a.click();
+  closeMenu();
+}
+
+function loadProfileFromFile(){
+  const inp=document.getElementById('profileLoadInput');
+  if(inp)inp.click();
+}
+
+function handleProfileLoad(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.state||!data.profile)throw new Error('Ungültiges Format');
+      // write all saved keys back into localStorage
+      Object.entries(data.state).forEach(([k,v])=>localStorage.setItem(k,v));
+      // make sure profile appears in global list
+      let profs=[];
+      try{profs=JSON.parse(localStorage.getItem('sq_profiles')||'[]');}catch(x){}
+      if(!profs.includes(data.profile)){profs.push(data.profile);localStorage.setItem('sq_profiles',JSON.stringify(profs));}
+      // reload and switch
+      loadProfiles();
+      hideProfileOverlay();
+      switchProfile(data.profile);
+    }catch(err){alert('Fehler beim Laden: '+err.message);}
+  };
+  reader.readAsText(file,'UTF-8');
+  input.value='';
+}
+
+function resetAllProgress(){
+  if(!confirm(`Gesamten Fortschritt von „${activeProfile}" wirklich löschen? Das kann nicht rückgängig gemacht werden.`))return;
+  saveStreakEntry();
+  // remove all keys for this profile
+  const prefix=activeProfile+':';
+  const toRemove=[];
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(prefix))toRemove.push(k);}
+  toRemove.forEach(k=>localStorage.removeItem(k));
+  doneSet=new Set();counts={};sesCorrect=0;streak=0;sesMaxStreak=0;
+  streakHistory=[];phase='start';pool=[];cur=null;
+  activeSetId='es-de';customSets=[];
+  activeUnits=new Set(getAllUnits());
+  buildPool();renderAll();closeMenu();
+}
+
+function showProfileOverlay(){
+  const o=document.getElementById('profileOverlay');
+  if(!o)return;
+  o.style.display='flex';
+  // show existing profiles as chips
+  const ep=document.getElementById('existingProfilesList');
+  if(ep&&profiles.length){
+    ep.innerHTML=`<div class="existing-profiles"><p>Oder wähle ein vorhandenes Profil:</p><div class="profile-chips">${
+      profiles.map(p=>`<div class="profile-chip" onclick="createProfile('${esc(p)}')">${esc(p)}</div>`).join('')
+    }</div></div>`;
+  }else if(ep){ep.innerHTML='';}
+  const inp=document.getElementById('newProfileInput');
+  if(inp){inp.value='';inp.focus();}
+}
+
+function hideProfileOverlay(){
+  const o=document.getElementById('profileOverlay');
+  if(o)o.style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════════
+// SET / LANGUAGE MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+function switchSet(id){
+  if(id===activeSetId)return;
+  saveStreakEntry();
+  activeSetId=id;
+  sesCorrect=0;streak=0;sesMaxStreak=0;phase='start';pool=[];cur=null;
+  load();buildPool();
+  renderAll();
+}
+
+function renderSetSelector(){
+  const sel=document.getElementById('setSelect');
+  if(!sel)return;
+  const sets=getAllSets();
+  sel.innerHTML=sets.map(s=>`<option value="${s.id}"${s.id===activeSetId?' selected':''}>${s.flagA} ${s.name}</option>`).join('');
+}
+
+// ─── CSV Import ────────────────────────────────────────────
+function openImport(){
+  document.getElementById('importOverlay').style.display='flex';
+  document.getElementById('importPreview').style.display='none';
+  const fi=document.getElementById('csvFileInput');
+  if(fi)fi.value='';
+}
+function closeImport(){document.getElementById('importOverlay').style.display='none';}
+
+function previewCSV(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const text=e.target.result;
+    const lines=text.trim().split(/\r?\n/);
+    if(lines.length<2){alert('Datei enthält zu wenig Zeilen.');return;}
+    const headers=parseCSVLine(lines[0]);
+    const langA=headers[0]||'Sprache A';
+    const langB=headers[1]||'Sprache B';
+    const count=lines.length-1;
+    document.getElementById('importName').value=langA;
+    document.getElementById('importFlagA').value='📖';
+    document.getElementById('importFlagB').value='🇩🇪';
+    document.getElementById('importStats').textContent=`${count} Einträge gefunden · Spalten: „${langA}" → „${langB}"`;
+    document.getElementById('importPreview').style.display='block';
+    document.getElementById('csvFileInput').dataset.text=text;
+  };
+  reader.readAsText(file,'UTF-8');
+}
+
+function doImport(){
+  const text=document.getElementById('csvFileInput').dataset.text||'';
+  if(!text){alert('Bitte zuerst eine Datei auswählen.');return;}
+  const name=document.getElementById('importName').value.trim()||'Importiert';
+  const flagA=document.getElementById('importFlagA').value.trim()||'📖';
+  const flagB=document.getElementById('importFlagB').value.trim()||'🎯';
+  const stripB=document.getElementById('importStripB').checked;
+
+  const lines=text.trim().split(/\r?\n/);
+  const headers=parseCSVLine(lines[0]);
+  const langA=headers[0]||name;
+  const langB=headers[1]||'B';
+
+  const vocab=[];
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim())continue;
+    const cols=parseCSVLine(lines[i]);
+    if(cols.length<2||(!cols[0]&&!cols[1]))continue;
+    vocab.push({id:i,a:cols[0]||'',b:cols[1]||'',u:(cols[2]||'1').trim()});
+  }
+  if(!vocab.length){alert('Keine gültigen Einträge gefunden.');return;}
+
+  const id='custom_'+Date.now();
+  customSets.push({id,name,langA,langB,flagA,flagB,stripArticlesOnB:stripB,stripArticlesOnA:false,vocab});
+  saveProfiles();
+  closeImport();
+  switchSet(id);
+}
+
+function parseCSVLine(line){
+  const res=[];let cur='';let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){res.push(cur.trim());cur='';}
+    else{cur+=c;}
+  }
+  res.push(cur.trim());
+  return res.map(s=>s.replace(/^"|"$/g,'').trim());
+}
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function shuffle(a){
+  a=[...a];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function norm(s){return String(s).trim().toLowerCase().replace(/[.,;:!?¡¿]/g,'').replace(/\s+/g,' ');}
+function stripArt(s,side){
+  const set=getActiveSet();
+  const doStrip=side==='b'?set.stripArticlesOnB:set.stripArticlesOnA;
+  if(!doStrip)return norm(s);
+  return norm(s).replace(/^(der|die|das|ein|eine|einen|dem|den|des)\s+/i,'');
+}
+function getCorrect(entry){return mode==='a-b'?entry.b:entry.a;}
+function getPrompt(entry){return mode==='a-b'?entry.a:entry.b;}
+function getAnswerSide(){return mode==='a-b'?'b':'a';}
+
+function check(input,entry){
+  if(!input.trim())return false;
+  const side=getAnswerSide();
+  return stripArt(norm(input),side)===stripArt(norm(getCorrect(entry)),side);
+}
+
+function makeProposals(entry){
+  const c=getCorrect(entry);
+  const side=getAnswerSide();
+  const others=shuffle(getActiveSet().vocab.filter(v=>v.id!==entry.id));
+  const decoys=[...new Set(others.map(v=>side==='b'?v.b:v.a).filter(d=>norm(d)!==norm(c)))].slice(0,3);
+  return shuffle([c,...decoys]);
+}
+
+function buildPool(){
+  pool=getActiveSet().vocab.filter(v=>!doneSet.has(v.id)&&activeUnits.has(v.u));
+}
+
+function pick(){
+  if(!pool.length){phase='complete';return;}
+  cur=pool[Math.floor(Math.random()*pool.length)];
+  phase='question';
+}
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════
+// QUIZ ACTIONS
+// ═══════════════════════════════════════════════════════════
+function startQuiz(){sesMaxStreak=0;sesCorrect=0;streak=0;buildPool();pick();render();}
+
+function doSubmit(){
+  const inp=document.getElementById('ai');
+  if(!inp||!inp.value.trim())return;
+  if(check(inp.value,cur)){markCorrect();}
+  else{streak=0;proposals=makeProposals(cur);phase='proposals';render();}
+}
+
+function pickProposal(idx){
+  const c=getCorrect(cur);
+  if(norm(proposals[idx])===norm(c)){
+    streak=0;
+    lastMsg=`✓ Richtig gewählt! „${c}" — kein Fortschritt (erste Antwort war falsch)`;
+    phase='ok';render();
+    setTimeout(()=>{if(pool.length){pick();}else{const ms=sesMaxStreak;saveStreakEntry();sesMaxStreak=ms;phase='complete';updateHistoryDisplay();}render();},1800);
+  }else{
+    document.querySelectorAll('.p-btn').forEach((b,i)=>{
+      b.disabled=true;
+      if(norm(proposals[i])===norm(c))b.classList.add('ok');
+      else if(i===idx)b.classList.add('fail');
+    });
+    setTimeout(()=>{render();},1800);
+  }
+}
+
+function markCorrect(){
+  counts[cur.id]=(counts[cur.id]||0)+1;
+  sesCorrect++;streak++;
+  if(streak>sesMaxStreak)sesMaxStreak=streak;
+  checkStreakMilestone(streak);
+  if(counts[cur.id]>=2){doneSet.add(cur.id);pool=pool.filter(v=>v.id!==cur.id);}
+  save();
+  const c=getCorrect(cur);
+  lastMsg=doneSet.has(cur.id)
+    ?`✓ Richtig! „${c}" — Erledigt! 🎉`
+    :`✓ Richtig! „${c}" — noch ${2-counts[cur.id]}× für Erledigt`;
+  phase='ok';render();
+  setTimeout(()=>{if(pool.length){pick();}else{const ms=sesMaxStreak;saveStreakEntry();sesMaxStreak=ms;phase='complete';updateHistoryDisplay();}render();},1600);
+}
+
+function setMode(m){
+  if(phase!=='start'&&phase!=='complete')return;
+  mode=m;save();render();
+}
+
+function resetProgress(){
+  if(!confirm('Fortschritt für dieses Vokabular zurücksetzen?'))return;
+  saveStreakEntry();
+  localStorage.removeItem(pfx('d'));localStorage.removeItem(pfx('c'));
+  doneSet=new Set();counts={};sesCorrect=0;streak=0;sesMaxStreak=0;phase='start';pool=[];cur=null;
+  buildPool();render();updateHistoryDisplay();
+}
+
+function exportDone(){
+  const rows=getActiveSet().vocab.filter(v=>doneSet.has(v.id));
+  if(!rows.length){alert('Noch keine erledigten Wörter.');return;}
+  const set=getActiveSet();
+  let csv=`${set.langA},${set.langB},unit\n`+rows.map(v=>`"${v.a.replace(/"/g,'""')}","${v.b.replace(/"/g,'""')}","${v.u}"`).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`${activeProfile}_${set.name}_erledigt.csv`;a.click();
+}
+
+// ═══════════════════════════════════════════════════════════
+// UNIT FILTER
+// ═══════════════════════════════════════════════════════════
+let unitPanelOpenState=false;
+function toggleUnitPanel(){
+  unitPanelOpenState=!unitPanelOpenState;
+  document.getElementById('unitPanel').style.display=unitPanelOpenState?'block':'none';
+  document.getElementById('unitArrow').classList.toggle('open',unitPanelOpenState);
+}
+
+function renderUnitChips(){
+  const locked=phase!=='start'&&phase!=='complete';
+  const chips=document.getElementById('unitChips');
+  if(!chips)return;
+  const units=getAllUnits();
+  chips.innerHTML=units.map(u=>{
+    const on=activeUnits.has(u);
+    return`<button class="uchip${on?' on':''}${locked?' locked':''}" onclick="toggleUnit('${u}')" title="Einheit ${u}">E${u}</button>`;
+  }).join('');
+  const sum=document.getElementById('unitSummary');
+  if(sum){
+    if(activeUnits.size===units.length)sum.textContent='Alle';
+    else sum.textContent=[...activeUnits].sort((a,b)=>+a-+b).map(u=>`E${u}`).join(', ');
+  }
+}
+
+function toggleUnit(u){
+  if(phase!=='start'&&phase!=='complete')return;
+  if(activeUnits.has(u)){if(activeUnits.size===1)return;activeUnits.delete(u);}
+  else{activeUnits.add(u);}
+  save();renderUnitChips();buildPool();
+  document.getElementById('sPool').textContent=pool.length;
+}
+
+function selectAllUnits(){
+  if(phase!=='start'&&phase!=='complete')return;
+  activeUnits=new Set(getAllUnits());save();renderUnitChips();buildPool();
+  document.getElementById('sPool').textContent=pool.length;
+}
+
+function selectNoUnits(){
+  if(phase!=='start'&&phase!=='complete')return;
+  activeUnits=new Set([getAllUnits()[0]]);save();renderUnitChips();buildPool();
+  document.getElementById('sPool').textContent=pool.length;
+}
+
+// ═══════════════════════════════════════════════════════════
+// STREAK HISTORY
+// ═══════════════════════════════════════════════════════════
+function updateHistoryDisplay(){
+  const list=document.getElementById('historyList');
+  const bestEl=document.getElementById('historyBest');
+  if(!list)return;
+  if(!streakHistory.length){
+    list.innerHTML='<span class="no-history">Noch keine Sessions.</span>';
+    if(bestEl)bestEl.textContent='';return;
+  }
+  const best=Math.max(...streakHistory.map(h=>h.max));
+  if(bestEl)bestEl.textContent=`Bester: ${best}`;
+  const recent=[...streakHistory].reverse().slice(0,10);
+  list.innerHTML=recent.map(h=>{
+    const dir=h.mode==='a-b'?'A→B':'B→A';
+    const sn=h.setName||h.set||'';
+    return`<div class="streak-badge${h.max===best?' best':''}">
+<span class="streak-num">${h.max}</span>
+<span class="streak-date">${h.date}</span>
+<span class="streak-mode">${sn?esc(sn.slice(0,6))+' ':''}</span>
+</div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+function render(){
+  const set=getActiveSet();
+  const tot=getActiveSet().vocab.filter(v=>activeUnits.has(v.u)).length;
+  const done=doneSet.size;
+  const pct=tot>0?(done/tot*100):0;
+
+  // Progress
+  document.getElementById('pDone').textContent=done;
+  document.getElementById('pTotal').textContent=tot;
+  document.getElementById('pFill').style.width=pct+'%';
+  document.getElementById('sStreak').textContent=streak;
+  document.getElementById('sCorrect').textContent=sesCorrect;
+  document.getElementById('sPool').textContent=pool.length;
+
+  // Title
+  document.getElementById('appTitle').textContent=`${set.flagA} ${set.name}-Quiz`;
+
+  // Mode buttons
+  const ab=mode==='a-b';
+  document.getElementById('btnAB').textContent=`${set.flagA} ${set.langA} → ${set.flagB} ${set.langB}`;
+  document.getElementById('btnBA').textContent=`${set.flagB} ${set.langB} → ${set.flagA} ${set.langA}`;
+  document.getElementById('btnAB').classList.toggle('active',ab);
+  document.getElementById('btnBA').classList.toggle('active',!ab);
+
+  // Mode toggle lock
+  const free=phase==='start'||phase==='complete';
+  const mt=document.getElementById('modeToggle');
+  mt.style.opacity=free?'1':'0.5';mt.style.pointerEvents=free?'auto':'none';
+
+  renderUnitChips();
+  renderSetSelector();
+
+  // Profile bar name
+  document.getElementById('pbName').textContent=activeProfile||'–';
+
+  // Quiz card
+  const card=document.getElementById('quizCard');
+  if(phase==='start')card.innerHTML=renderStart();
+  else if(phase==='question'){card.innerHTML=renderQ();const i=document.getElementById('ai');if(i)i.focus();}
+  else if(phase==='proposals')card.innerHTML=renderProps();
+  else if(phase==='ok')card.innerHTML=`<div class="center" style="padding:36px 0"><div style="font-size:3rem">✅</div><div class="fb ok" style="margin-top:14px">${esc(lastMsg)}</div></div>`;
+  else if(phase==='complete')card.innerHTML=renderComplete();
+}
+
+function renderAll(){render();updateHistoryDisplay();}
+
+function renderStart(){
+  const set=getActiveSet();
+  const done=doneSet.size;
+  const rem=getActiveSet().vocab.filter(v=>activeUnits.has(v.u)).length-done;
+  const dir=mode==='a-b'?`${set.flagA} → ${set.flagB}`:`${set.flagB} → ${set.flagA}`;
+  return`<div class="center" style="padding:18px 0">
+<div style="font-size:3rem;margin-bottom:12px">${set.flagA}</div>
+<h2 style="font-size:1.5rem;color:#1a1a2e;margin-bottom:8px">${done>0?'Weiter lernen!':'Quiz starten'}</h2>
+<p style="color:var(--gray);margin-bottom:22px">${rem} Wörter offen · ${dir}</p>
+<button class="btn btn-primary btn-big" onclick="startQuiz()">${done>0?'▶ Fortsetzen':'▶ Starten'}</button>
+<div style="font-size:.75rem;color:var(--gray);margin-top:18px">${set.vocab.length} Vokabeln gesamt</div>
+</div>`;
+}
+
+function renderQ(){
+  const set=getActiveSet();
+  const cnt=counts[cur.id]||0;
+  const fl=mode==='a-b'?set.flagA:set.flagB;
+  const tl=mode==='a-b'?set.flagB:set.flagA;
+  const tLang=mode==='a-b'?set.langB:set.langA;
+  const artHint=mode==='a-b'?set.stripArticlesOnB:set.stripArticlesOnA;
+  const hint=artHint?'(Artikel optional)':'(Artikel erforderlich)';
+  return`<div class="q-label">${fl} → ${tl}</div>
+<div class="q-unit">Einheit ${cur.u}</div>
+<div class="dots"><div class="dot${cnt>=1?' on':''}"></div><div class="dot${cnt>=2?' on':''}"></div></div>
+<div class="q-word">${esc(getPrompt(cur))}</div>
+<form class="ans-form" onsubmit="doSubmit();return false">
+<input id="ai" class="ans-input" type="text" placeholder="${esc(tLang)}…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+<button type="submit" class="btn btn-primary">OK</button>
+</form>
+<div class="hint">${hint} · Enter oder OK</div>`;
+}
+
+function renderProps(){
+  const set=getActiveSet();
+  const fl=mode==='a-b'?set.flagA:set.flagB;
+  const tl=mode==='a-b'?set.flagB:set.flagA;
+  const btns=proposals.map((p,i)=>`<button class="p-btn" onclick="pickProposal(${i})">${esc(p)}</button>`).join('');
+  return`<div class="q-label">${fl} → ${tl}</div>
+<div class="q-unit">Einheit ${cur.u}</div>
+<div class="q-word">${esc(getPrompt(cur))}</div>
+<div class="p-label">Wähle die richtige Übersetzung:</div>
+<div class="p-grid">${btns}</div>`;
+}
+
+function renderComplete(){
+  return`<div class="center" style="padding:18px 0">
+<div style="font-size:3rem;margin-bottom:12px">🏆</div>
+<h2 style="font-size:1.6rem;color:#1a1a2e;margin-bottom:8px">Alle Wörter erledigt!</h2>
+<p style="color:var(--gray);margin-bottom:0">Glückwunsch, ${esc(activeProfile)}!</p>
+<div class="c-stats">
+<div class="c-stat"><div class="c-stat-v">${sesCorrect}</div><div class="c-stat-l">Richtige Antworten</div></div>
+<div class="c-stat"><div class="c-stat-v">${sesMaxStreak}</div><div class="c-stat-l">Bester Streak</div></div>
+</div>
+<button class="btn btn-primary" style="margin-right:8px" onclick="exportDone()">⬇ Export</button>
+<button class="btn btn-outline" onclick="resetProgress()">↺ Neu starten</button>
+</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// STREAK MILESTONE ANIMATION
+// ═══════════════════════════════════════════════════════════
+const MILESTONES=[
+  [10, '🔥',  'Streak!',           'Heiß! Weiter so!'],
+  [15, '🔥🔥', '15er Streak!',     'Richtig in Fahrt!'],
+  [20, '⚡',   '20er Streak!',     'Unaufhaltbar!'],
+  [25, '🌟',   '25er Streak!',     'Absolute Legende!'],
+  [30, '🏆',   '30er Streak!',     'STREAKMONSTER!'],
+  [40, '💎',   '40er Streak!',     'Überirdisch! 🛸'],
+  [50, '🚀',   '50er MEGA-Streak!','Bist du ein Bot?! 🤖'],
+];
+
+function getMilestoneData(n){
+  const entry=[...MILESTONES].reverse().find(([t])=>n>=t);
+  if(!entry)return null;
+  const[,fire,label,sub]=entry;
+  return{fire, label: n===entry[0]?label:`${n}er ${label.replace(/^\d+er /,'')}`, sub};
+}
+
+function checkStreakMilestone(s){
+  if(s>=10&&s%5===0)triggerMilestone(s);
+}
+
+let _msTimer=null;
+let _confettiRaf=null;
+
+function triggerMilestone(n){
+  const data=getMilestoneData(n);
+  if(!data)return;
+  document.getElementById('msFire').textContent=data.fire;
+  document.getElementById('msNum').textContent=n;
+  document.getElementById('msLabel').textContent=data.label;
+  document.getElementById('msSub').textContent=data.sub;
+  const banner=document.getElementById('milestoneBanner');
+  banner.classList.remove('ms-hide');
+  // force reflow so transition fires
+  void banner.offsetWidth;
+  banner.classList.add('ms-show');
+  if(_msTimer)clearTimeout(_msTimer);
+  _msTimer=setTimeout(()=>{
+    banner.classList.remove('ms-show');
+    banner.classList.add('ms-hide');
+  },2600);
+  launchConfetti(n);
+}
+
+function launchConfetti(intensity){
+  const canvas=document.getElementById('confettiCanvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  canvas.classList.add('active');
+  const count=Math.min(70+intensity*2,200);
+  const colors=['#ffd700','#ff6b6b','#4ecdc4','#45b7d1','#a29bfe','#fd79a8','#ff8c00','#55efc4'];
+  const particles=Array.from({length:count},()=>({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height*0.4-20,
+    r:Math.random()*5+2.5,
+    c:colors[Math.floor(Math.random()*colors.length)],
+    vx:(Math.random()-0.5)*5,
+    vy:Math.random()*3+1.5,
+    va:(Math.random()-0.5)*.18,
+    angle:Math.random()*Math.PI*2,
+    shape:Math.random()<.55?'rect':'circle',
+    w:Math.random()*8+4,
+    h:Math.random()*4+2
+  }));
+  let frame=0;const maxFrames=110;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;p.angle+=p.va;p.vy+=0.12;
+      const alpha=Math.max(0,1-frame/maxFrames*1.1);
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);
+      ctx.fillStyle=p.c;ctx.globalAlpha=alpha;
+      if(p.shape==='rect'){ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);}
+      else{ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();}
+      ctx.restore();
+    });
+    frame++;
+    if(frame<maxFrames){_confettiRaf=requestAnimationFrame(draw);}
+    else{canvas.classList.remove('active');ctx.clearRect(0,0,canvas.width,canvas.height);}
+  }
+  if(_confettiRaf)cancelAnimationFrame(_confettiRaf);
+  draw();
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+// Close dropdown when clicking outside
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.dropdown-wrap'))closeMenu();
+});
+
+loadProfiles();
+if(!activeProfile){
+  showProfileOverlay();
+}else{
+  load();buildPool();renderAll();
+}
+
+window.addEventListener('beforeunload',()=>saveStreakEntry());
+</script>
+</body>
+</html>
