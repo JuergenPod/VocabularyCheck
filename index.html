@@ -118,6 +118,9 @@ h1{font-size:1.2rem;font-weight:700;color:#1a1a2e}
 .dropdown-item.danger{color:var(--red)}
 .save-banner{background:#d4edda;border:1px solid #c3e6cb;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:.82rem;color:#155724;display:none}
 .load-link{display:block;text-align:center;margin-top:14px;font-size:.82rem;color:var(--blue);cursor:pointer;text-decoration:underline}
+.profile-sel{width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-size:1rem;outline:none;background:#fff;color:#1a1a2e;cursor:pointer;margin-bottom:0}
+.profile-sel:focus{border-color:var(--blue)}
+body.dark .profile-sel{background:#2d3748;border-color:#4b5563;color:#f3f4f6}
 /* Import modal fields */
 .import-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .import-field label{display:block;font-size:.75rem;color:var(--gray);margin-bottom:4px}
@@ -267,17 +270,9 @@ body.dark .load-link{color:#7eb3ff}
   </div>
 </div>
 
-<!-- Profile creation overlay -->
+<!-- Profile selection/creation overlay (content rendered by showProfileOverlay()) -->
 <div class="overlay" id="profileOverlay">
-  <div class="overlay-inner">
-    <h2>👋 Willkommen!</h2>
-    <p>Erstelle dein Profil, um deinen Fortschritt zu speichern.</p>
-    <input class="overlay-input" id="newProfileInput" type="text" placeholder="Dein Name…" maxlength="30"
-      onkeydown="if(event.key==='Enter')submitNewProfile()">
-    <button class="btn btn-primary btn-big" style="width:100%" onclick="submitNewProfile()">Loslegen →</button>
-    <div id="existingProfilesList"></div>
-    <span class="load-link" onclick="loadProfileFromFile()">📂 Gespeicherten Spielstand laden</span>
-  </div>
+  <div class="overlay-inner" id="profileOverlayInner"></div>
 </div>
 
 <!-- CSV Import overlay -->
@@ -968,8 +963,21 @@ function createProfile(name){
 }
 
 function submitNewProfile(){
+  const sel=document.getElementById('profileSelect');
+  if(sel&&sel.value&&sel.value!=='__new__'){createProfile(sel.value);return;}
   const inp=document.getElementById('newProfileInput');
   if(inp)createProfile(inp.value);
+}
+
+function onProfileSelectChange(){
+  const sel=document.getElementById('profileSelect');
+  const wrap=document.getElementById('newNameWrap');
+  if(!sel||!wrap)return;
+  const isNew=sel.value==='__new__';
+  wrap.style.display=isNew?'block':'none';
+  const btn=document.querySelector('#profileOverlay .btn-primary');
+  if(btn)btn.textContent=isNew?'Profil erstellen →':'Weiter →';
+  if(isNew){const inp=document.getElementById('newProfileInput');if(inp){inp.value='';inp.focus();}}
 }
 
 function toggleProfileMenu(){
@@ -1076,17 +1084,38 @@ function resetAllProgress(){
 
 function showProfileOverlay(){
   const o=document.getElementById('profileOverlay');
-  if(!o)return;
+  const inner=document.getElementById('profileOverlayInner');
+  if(!o||!inner)return;
+  if(profiles.length){
+    // existing profiles → show dropdown + option to add new
+    inner.innerHTML=`
+<h2>👋 Willkommen!</h2>
+<p>Wähle dein Profil oder lege ein neues an.</p>
+<select class="profile-sel" id="profileSelect" onchange="onProfileSelectChange()">
+  ${profiles.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')}
+  <option value="__new__">＋ Neues Profil anlegen…</option>
+</select>
+<div id="newNameWrap" style="display:none;margin-top:12px">
+  <input class="overlay-input" id="newProfileInput" type="text" placeholder="Name…" maxlength="30"
+    onkeydown="if(event.key==='Enter')submitNewProfile()" style="margin-bottom:0">
+</div>
+<button class="btn btn-primary btn-big" style="width:100%;margin-top:14px" onclick="submitNewProfile()">Weiter →</button>
+<span class="load-link" onclick="loadProfileFromFile()">📂 Gespeicherten Spielstand laden</span>`;
+    const sel=document.getElementById('profileSelect');
+    if(sel)sel.focus();
+  }else{
+    // no profiles yet → simple create form
+    inner.innerHTML=`
+<h2>👋 Willkommen!</h2>
+<p>Erstelle dein erstes Profil, um deinen Fortschritt zu speichern.</p>
+<input class="overlay-input" id="newProfileInput" type="text" placeholder="Dein Name…" maxlength="30"
+  onkeydown="if(event.key==='Enter')submitNewProfile()">
+<button class="btn btn-primary btn-big" style="width:100%" onclick="submitNewProfile()">Loslegen →</button>
+<span class="load-link" onclick="loadProfileFromFile()">📂 Gespeicherten Spielstand laden</span>`;
+    const inp=document.getElementById('newProfileInput');
+    if(inp){inp.value='';inp.focus();}
+  }
   o.style.display='flex';
-  // show existing profiles as chips
-  const ep=document.getElementById('existingProfilesList');
-  if(ep&&profiles.length){
-    ep.innerHTML=`<div class="existing-profiles"><p>Oder wähle ein vorhandenes Profil:</p><div class="profile-chips">${
-      profiles.map(p=>`<div class="profile-chip" onclick="createProfile('${esc(p)}')">${esc(p)}</div>`).join('')
-    }</div></div>`;
-  }else if(ep){ep.innerHTML='';}
-  const inp=document.getElementById('newProfileInput');
-  if(inp){inp.value='';inp.focus();}
 }
 
 function hideProfileOverlay(){
