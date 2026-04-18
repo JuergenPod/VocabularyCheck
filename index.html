@@ -149,6 +149,13 @@ body.dark .ov-head.ov-me{background:#1e3a5f;color:#7eb3ff}
 body.dark .ov-unit-cnt,body.dark .ov-done-date,body.dark .ov-progress{color:#6b7280}
 body.dark .ov-none{color:#4b5563}
 body.dark .ov-bar-wrap{background:#374151}
+/* ── Special character picker ── */
+.char-picker{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.char-btn{padding:6px 11px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-size:1rem;line-height:1;cursor:pointer;transition:border-color .12s,background .12s,transform .1s,color .12s;color:#333;font-family:inherit;min-width:36px;text-align:center;user-select:none}
+.char-btn:hover{border-color:var(--blue);background:#ebf0ff;color:var(--blue);transform:translateY(-1px)}
+.char-btn:active{transform:translateY(0);background:#d6e4ff}
+body.dark .char-btn{background:#2d3748;border-color:#4b5563;color:#d1d5db}
+body.dark .char-btn:hover{border-color:#7eb3ff;background:#1e3a5f;color:#7eb3ff}
 @media(max-width:480px){.container{padding:10px}.q-word{font-size:1.5rem}.p-grid{grid-template-columns:1fr}.header-row2{flex-direction:column;align-items:flex-start}}
 /* ── Dark mode ── */
 body,
@@ -1294,6 +1301,33 @@ function updateHistoryDisplay(){
 }
 
 // ═══════════════════════════════════════════════════════════
+// SPECIAL CHARACTER PICKER
+// ═══════════════════════════════════════════════════════════
+function getSpecialChars(){
+  const side=getAnswerSide();
+  const seen=new Set();
+  getActiveSet().vocab.forEach(v=>{
+    const word=side==='b'?v.b:v.a;
+    for(const c of word){if(c.charCodeAt(0)>127)seen.add(c.toLowerCase());}
+  });
+  // sort: letters first, then symbols (¿ ¡)
+  return[...seen].sort((a,b)=>{
+    const aL=/\p{L}/u.test(a),bL=/\p{L}/u.test(b);
+    if(aL&&!bL)return -1; if(!aL&&bL)return 1;
+    return a.localeCompare(b,'de');
+  });
+}
+
+function insertChar(c){
+  const inp=document.getElementById('ai');
+  if(!inp)return;
+  const s=inp.selectionStart,e=inp.selectionEnd,v=inp.value;
+  inp.value=v.slice(0,s)+c+v.slice(e);
+  inp.selectionStart=inp.selectionEnd=s+c.length;
+  inp.focus();
+}
+
+// ═══════════════════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════════════════
 function render(){
@@ -1364,6 +1398,10 @@ function renderQ(){
   const tLang=mode==='a-b'?set.langB:set.langA;
   const artHint=mode==='a-b'?set.stripArticlesOnB:set.stripArticlesOnA;
   const hint=artHint?'(Artikel optional)':'(Artikel erforderlich)';
+  const specials=getSpecialChars();
+  const picker=specials.length
+    ?`<div class="char-picker">${specials.map(c=>`<button type="button" class="char-btn" onclick="insertChar('${c}')">${c}</button>`).join('')}</div>`
+    :'';
   return`<div class="q-label">${fl} → ${tl}</div>
 <div class="q-unit">Einheit ${cur.u}</div>
 <div class="dots"><div class="dot${cnt>=1?' on':''}"></div><div class="dot${cnt>=2?' on':''}"></div></div>
@@ -1372,7 +1410,8 @@ function renderQ(){
 <input id="ai" class="ans-input" type="text" placeholder="${esc(tLang)}…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
 <button type="submit" class="btn btn-primary">OK</button>
 </form>
-<div class="hint">${hint} · Enter oder OK</div>`;
+<div class="hint">${hint} · Enter oder OK</div>
+${picker}`;
 }
 
 function renderProps(){
