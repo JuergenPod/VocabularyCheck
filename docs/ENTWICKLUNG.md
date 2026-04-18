@@ -5,11 +5,13 @@ Kurze Orientierung für Änderungen am Code. Die App ist bewusst eine **einzelne
 ## Architektur auf einen Blick
 
 ```
-index.html                  ← HTML + CSS + JS in einer Datei (~1.950 Zeilen)
+index.html                  ← HTML + CSS + JS in einer Datei (~2.300 Zeilen)
 vocab/
   es-de.js                  ← registriert sich in window.VOCAB_REGISTRY
   la-de.js
   la3-de.js
+learn/
+  epik-de.js                ← registriert sich in window.LEARN_REGISTRY
 ```
 
 **Warum `<script src>` statt `fetch` für die Vokabeln?**  
@@ -65,19 +67,78 @@ vocab/
 |---|---|
 | `stripArticlesOnA/B` | Entfernt `der/die/das/el/la/los/las/le/la/les` vor dem Match |
 
+## Lern-Modul hinzufügen
+
+Lern-Module sind themenbasiert (nicht vokabelbasiert) und haben drei Modi: Karteikarten, Quiz, Textanalyse. Jeder Modus ist optional — leeres Array = Tab wird versteckt.
+
+1. Neue Datei `learn/<id>.js` anlegen:
+
+   ```js
+   (window.LEARN_REGISTRY=window.LEARN_REGISTRY||[]).push({
+     id:"epik-de",
+     name:"Epik – Deutsch 3. Klasse",
+     subject:"Deutsch",
+     icon:"📖",
+     flashcards:[
+       {id:1, term:"Epik", def:"Erzählende Literatur in Prosa oder Versen.", ex:"Roman, Novelle, Kurzgeschichte"},
+       // ...
+     ],
+     quiz:[
+       {id:1, q:"Was ist ein Ich-Erzähler?", opts:["A","B","C","D"], correct:0, expl:"Erzählt aus der Ich-Perspektive, ist selbst Figur."},
+       // ...
+     ],
+     texts:[
+       {id:1, author:"E.T.A. Hoffmann", work:"Der Sandmann", year:1816,
+        kind:"Erzählperspektive",
+        choices:["Ich-Erzähler","Auktorial","Personal","Neutral"],
+        correct:0,
+        text:"„Gewiß werdet Ihr alle voll Unruhe sein ...",
+        expl:"Die Ich-Form + direkte Ansprache des Lesers kennzeichnen den Ich-Erzähler."},
+       // ...
+     ]
+   });
+   ```
+
+2. In `index.html` nach den anderen learn-Scripts einbinden:
+
+   ```html
+   <script src="learn/epik-de.js"></script>
+   ```
+
+3. Fertig — die App listet das Modul automatisch im Profil-Menü.
+
+### Feldlisten
+
+**flashcards**: `id` (Pflicht, stabil), `term`, `def`, `ex` (optional).
+
+**quiz**: `id`, `q` (Frage), `opts` (Array mit 2+ Antworten), `correct` (Index in `opts`), `expl` (Erklärung für Richtig + Falsch). Optionen werden zur Laufzeit gemischt; `correct` wird intern umgerechnet.
+
+**texts**: `id`, `author`, `work`, `year`, `kind` (was zu bestimmen ist, z.B. „Erzählperspektive"), `choices`, `correct`, `text` (der Textausschnitt selbst), `expl`.
+
+Falsche Antworten in Quiz/Textanalyse werden zurück in die Queue gestellt (idx+3/+4) und kommen später nochmal.
+
+### Fortschritts-Keys (pro Profil)
+
+- `<profil>:learn:<moduleId>:fc:<itemId>` — Karteikarte gelernt (`"1"`)
+- `<profil>:learn:<moduleId>:q:<itemId>` — Quiz-Frage korrekt beantwortet
+- `<profil>:learn:<moduleId>:t:<itemId>` — Textanalyse korrekt bestimmt
+
+Werden automatisch vom GitHub-Sync mit erfasst (scannt alle `<profil>:*`).
+
 ## Wichtige Code-Orte in `index.html`
 
 | Zeile (ca.) | Was |
 |---|---|
-| `~495` | `<script src>` Tags für Vokabelsets |
+| `~495` | `<script src>` Tags für Vokabelsets + Lern-Module |
 | `~540` | `BUILTIN_SETS`, `getActiveSet()`, `getAllUnits()` |
+| `~820` | `renderProfileMenu()` — listet Vokabelsets + Lern-Module |
 | `~840` | `save()` — localStorage-Write, triggert `schedulePush()` |
-| `~1000` | `renderProfileMenu()` — Menüeinträge |
 | `~1033` | `renderExtraInfo()` — zeigt forms/rel/loan nach richtiger Antwort |
 | `~1580` | `checkForUpdate()` — Auto-Update-Banner via GitHub-API |
 | `~1700` | Leaderboard (`computeLeaderboardData`, `renderLeaderboard`) |
 | `~1800` | GitHub-Sync (`pullFromGitHub`, `pushToGitHub`, `schedulePush`) |
-| `~1925` | Init-Block |
+| `~1907` | Lern-Modul JS (`showLearn`, Karteikarten/Quiz/Textanalyse-Renderer) |
+| `~2150` | Init-Block |
 
 ## localStorage-Keys
 
@@ -85,6 +146,7 @@ vocab/
 - `sq_active_profile` — Aktives Profil
 - `<profil>:<setId>:<dir>:d` — Done-IDs (Array), `dir` ∈ `a-b` / `b-a`
 - `<profil>:<setId>:<dir>:h` — Streak-History (Array von `{date, max}`)
+- `<profil>:learn:<modId>:{fc|q|t}:<itemId>` — Lern-Fortschritt pro Modul/Modus/Item
 - `<profil>:mtime` — ISO-Timestamp letzter Änderung (für Sync-Merge)
 - `sq_gh_token` — GitHub PAT (pro Gerät)
 - `sq_gh_device` — frei wählbarer Gerätename

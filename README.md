@@ -5,12 +5,13 @@ Vokabel-Quiz für die Familie — läuft komplett im Browser (PC, Handy, Tablet)
 ## Was die App kann
 
 - **Vokabelsets**: Spanisch 1. Klasse, Latein 1. Klasse, Latein 3. Klasse (vorinstalliert). Eigene Sets per CSV-Import möglich.
+- **Lern-Module** (neu): Themen-Module mit drei Modi — **Karteikarten** zum Einprägen, **Quiz** mit Multiple-Choice + Erklärung (falsche Fragen kommen wieder) und **Textanalyse** (z.B. Erzählperspektive bestimmen). Vorinstalliert: „Epik – Deutsch 3. Klasse".
 - **Profile**: Jedes Familienmitglied hat sein eigenes Profil mit eigenem Fortschritt.
 - **Richtungs-getrennter Fortschritt**: De → Fremdsprache und Fremdsprache → De werden getrennt gezählt.
 - **Pro Kapitel / Modul**: Kapitel einzeln auswählbar; Fortschrittsanzeige pro Kapitel.
 - **Streaks + Leaderboard**: Meilenstein-Animationen, Bestenliste über alle Profile (Streaks + erledigte Wörter).
 - **Hilfsinfos bei richtiger Antwort**: Spezialformen, verwandte Wörter, Fremdwörter — werden nach „richtig" eingeblendet (nicht Teil der Quiz-Prüfung).
-- **GitHub-Sync**: Spielstand synct automatisch zwischen allen Geräten der Familie.
+- **GitHub-Sync**: Spielstand (Vokabeln + Lern-Module) synct automatisch zwischen allen Geräten der Familie.
 - **Auto-Update**: Banner informiert, wenn eine neue Version im Repo liegt.
 - **Dark Mode**, Offline-fähig (läuft auch ohne Internet — nur ohne Sync/Update-Check).
 
@@ -72,7 +73,8 @@ Es gibt zwei Wege:
 | `vocab/es-de.js` | Spanisch 1. Klasse |
 | `vocab/la-de.js` | Latein 1. Klasse |
 | `vocab/la3-de.js` | Latein 3. Klasse |
-| `screenshots/` | Quellmaterial für Vokabelextraktion (nicht im Repo) |
+| `learn/epik-de.js` | Lern-Modul „Epik – Deutsch 3. Klasse" (Karteikarten + Quiz + Textanalyse) |
+| `screenshots/` | Quellmaterial für Vokabel-/Lern-Extraktion (nicht im Repo) |
 | `docs/ENTWICKLUNG.md` | Entwickler-Doku |
 
 ## Fehler / Wünsche

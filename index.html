@@ -110,6 +110,47 @@ h1{font-size:1.2rem;font-weight:700;color:#1a1a2e}
 .lb-name{font-weight:600;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb-val{font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums}
 .lb-empty{color:var(--gray);font-size:.88rem;padding:10px;text-align:center}
+/* Learn module */
+.learn-tabs{display:flex;gap:6px;margin-bottom:12px;border-bottom:2px solid var(--border)}
+.learn-tab{flex:1;padding:9px 8px;background:transparent;border:none;font-size:.88rem;font-weight:600;color:var(--gray);cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;border-radius:6px 6px 0 0}
+.learn-tab:hover{background:#f3f4f6}
+.learn-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.learn-content{min-height:260px}
+.learn-stats{display:flex;justify-content:space-between;font-size:.82rem;color:var(--gray);margin-bottom:10px}
+.learn-bar{height:6px;background:#e5e7eb;border-radius:3px;margin-bottom:14px;overflow:hidden}
+.learn-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),#60a5fa);transition:width .3s}
+.fcard{background:var(--light);border-radius:12px;padding:22px 18px;min-height:180px;display:flex;flex-direction:column;justify-content:center;cursor:pointer;border:2px solid var(--border);transition:all .15s;margin-bottom:14px}
+.fcard:hover{border-color:var(--blue)}
+.fcard-front{text-align:center;font-size:1.35rem;font-weight:700;color:#1a1a2e}
+.fcard-hint{text-align:center;font-size:.78rem;color:var(--gray);margin-top:10px}
+.fcard-back-term{font-weight:700;color:var(--blue);margin-bottom:8px;font-size:1.05rem}
+.fcard-def{font-size:.95rem;line-height:1.5;color:#1f2937}
+.fcard-ex{margin-top:10px;padding:8px 12px;background:#fff;border-left:3px solid #f59e0b;border-radius:6px;font-size:.88rem;font-style:italic;color:#374151}
+.learn-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.learn-btn{padding:11px;border-radius:10px;border:2px solid;background:#fff;font-size:.92rem;font-weight:600;cursor:pointer;transition:all .1s}
+.learn-btn.ok{border-color:#10b981;color:#047857}
+.learn-btn.ok:hover{background:#d1fae5}
+.learn-btn.no{border-color:#ef4444;color:#b91c1c}
+.learn-btn.no:hover{background:#fee2e2}
+.qopt{display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;border:2px solid var(--border);background:#fff;border-radius:10px;font-size:.95rem;cursor:pointer;transition:all .1s;color:#1f2937}
+.qopt:hover{border-color:var(--blue);background:#eff6ff}
+.qopt.sel-ok{border-color:#10b981;background:#d1fae5;color:#065f46}
+.qopt.sel-no{border-color:#ef4444;background:#fee2e2;color:#7f1d1d}
+.qopt.reveal-ok{border-color:#10b981;background:#ecfdf5;color:#065f46}
+.qopt:disabled{cursor:default}
+.qexpl{margin-top:12px;padding:11px 14px;border-radius:10px;font-size:.9rem;line-height:1.45}
+.qexpl.ok{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+.qexpl.no{background:#fee2e2;color:#7f1d1d;border:1px solid #fca5a5}
+.qexpl b{display:block;margin-bottom:4px}
+.qnext{display:block;width:100%;margin-top:10px;padding:11px;border-radius:10px;background:var(--blue);color:#fff;border:none;font-weight:700;font-size:.95rem;cursor:pointer}
+.qnext:hover{filter:brightness(1.08)}
+.tmeta{font-size:.78rem;color:var(--gray);margin-bottom:4px}
+.twork{font-weight:700;font-size:1.02rem;color:#1a1a2e;margin-bottom:10px}
+.ttext{background:#fffbe8;border-left:4px solid #f59e0b;padding:12px 14px;border-radius:6px;font-size:.93rem;line-height:1.55;margin-bottom:14px;max-height:240px;overflow-y:auto;white-space:pre-wrap}
+.tquestion{font-weight:600;margin-bottom:8px;color:#1a1a2e}
+.learn-done{text-align:center;padding:30px 10px;color:var(--gray)}
+.learn-done-emoji{font-size:3rem;margin-bottom:10px}
+.learn-done-msg{font-size:1.1rem;font-weight:700;color:#1a1a2e;margin-bottom:6px}
 .center{text-align:center}
 .c-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
 .c-stat{background:var(--light);border-radius:10px;padding:14px}
@@ -253,6 +294,31 @@ body.dark .lb-row{background:#2d3748}
 body.dark .lb-row.me{background:#1e3a5f;border-color:#3b82f6}
 body.dark .lb-name{color:#f3f4f6}
 body.dark .lb-val{color:#7eb3ff}
+body.dark .learn-tab:hover{background:#2d3748}
+body.dark .learn-tab{color:#9ca3af}
+body.dark .learn-tab.active{color:#7eb3ff;border-bottom-color:#7eb3ff}
+body.dark .learn-bar{background:#374151}
+body.dark .fcard{background:#2d3748;border-color:#4b5563}
+body.dark .fcard:hover{border-color:#7eb3ff}
+body.dark .fcard-front{color:#f3f4f6}
+body.dark .fcard-back-term{color:#7eb3ff}
+body.dark .fcard-def{color:#e5e7eb}
+body.dark .fcard-ex{background:#1f2937;color:#d1d5db;border-left-color:#fbbf24}
+body.dark .learn-btn{background:#2d3748}
+body.dark .learn-btn.ok{color:#6ee7b7}
+body.dark .learn-btn.no{color:#fca5a5}
+body.dark .learn-btn.ok:hover{background:#14291e}
+body.dark .learn-btn.no:hover{background:#291414}
+body.dark .qopt{background:#2d3748;border-color:#4b5563;color:#e5e7eb}
+body.dark .qopt:hover{background:#1e3a5f;border-color:#7eb3ff}
+body.dark .qopt.sel-ok,body.dark .qopt.reveal-ok{background:#14291e;color:#6ee7b7;border-color:#10b981}
+body.dark .qopt.sel-no{background:#291414;color:#fca5a5;border-color:#ef4444}
+body.dark .qexpl.ok{background:#14291e;color:#6ee7b7;border-color:#047857}
+body.dark .qexpl.no{background:#291414;color:#fca5a5;border-color:#b91c1c}
+body.dark .ttext{background:#2d3748;color:#e5e7eb;border-left-color:#fbbf24}
+body.dark .twork{color:#f3f4f6}
+body.dark .tquestion{color:#f3f4f6}
+body.dark .learn-done-msg{color:#f3f4f6}
 body.dark .c-stat{background:#2d3748}
 body.dark .c-stat-l{color:#9ca3af}
 body.dark .streak-badge{background:#2d3748}
@@ -388,6 +454,22 @@ body.dark .load-link{color:#7eb3ff}
   </div>
 </div>
 
+<!-- Learn module overlay -->
+<div class="overlay" id="learnOverlay" style="display:none">
+  <div class="overlay-inner">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <h2 id="learnTitle" style="margin:0">📖 Lernen</h2>
+      <button class="btn btn-outline btn-sm" onclick="hideLearn()">Schließen</button>
+    </div>
+    <div class="learn-tabs">
+      <button class="learn-tab active" data-tab="fc" onclick="switchLearnTab('fc')">📇 Karteikarten</button>
+      <button class="learn-tab" data-tab="q" onclick="switchLearnTab('q')">❓ Quiz</button>
+      <button class="learn-tab" data-tab="t" onclick="switchLearnTab('t')">🔎 Textanalyse</button>
+    </div>
+    <div id="learnContent" class="learn-content"></div>
+  </div>
+</div>
+
 <!-- GitHub sync settings overlay -->
 <div class="overlay" id="syncSettingsOverlay" style="display:none">
   <div class="overlay-inner">
@@ -497,6 +579,8 @@ body.dark .load-link{color:#7eb3ff}
 <script src="vocab/es-de.js"></script>
 <script src="vocab/la-de.js"></script>
 <script src="vocab/la3-de.js"></script>
+<!-- Learn modules — each file registers itself in window.LEARN_REGISTRY -->
+<script src="learn/epik-de.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════
 // BUILT-IN VOCABULARY SETS
@@ -734,8 +818,11 @@ function renderProfileMenu(){
     <button onclick="submitMenuProfile()">+</button>
   </div>`;
   html+=`<div class="dropdown-divider"></div>
-  <div class="dropdown-item" onclick="showLeaderboard()">🏆 Leaderboard</div>
-  <div class="dropdown-item" onclick="showSyncSettings()">☁️ GitHub-Sync</div>
+  <div class="dropdown-item" onclick="showLeaderboard()">🏆 Leaderboard</div>`;
+  (window.LEARN_REGISTRY||[]).forEach(mod=>{
+    html+=`<div class="dropdown-item" onclick="showLearn('${esc(mod.id)}')">${esc(mod.icon||'📖')} ${esc(mod.name)}</div>`;
+  });
+  html+=`<div class="dropdown-item" onclick="showSyncSettings()">☁️ GitHub-Sync</div>
   <div class="dropdown-divider"></div>
   <div class="dropdown-item save" onclick="saveProfileToFile()">💾 Spielstand speichern</div>
   <div class="dropdown-item load" onclick="loadProfileFromFile()">📂 Spielstand laden</div>
@@ -1818,6 +1905,277 @@ async function refreshLeaderboard(){
   }catch(e){
     if(msg)msg.textContent='⚠️ Aktualisierung fehlgeschlagen: '+(e.message||'unbekannt');
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+// LEARN MODULE  (flashcards + quiz + text analysis)
+// ═══════════════════════════════════════════════════════════
+function getAllLearnModules(){return window.LEARN_REGISTRY||[];}
+
+function learnKey(moduleId,kind,itemId){
+  // {profile}:learn:{moduleId}:{fc|q|t}:{itemId}
+  return `${activeProfile}:learn:${moduleId}:${kind}:${itemId}`;
+}
+
+function getLearnStat(moduleId,kind,itemId){
+  try{return JSON.parse(localStorage.getItem(learnKey(moduleId,kind,itemId))||'{}');}
+  catch(e){return{};}
+}
+
+function setLearnStat(moduleId,kind,itemId,stat){
+  localStorage.setItem(learnKey(moduleId,kind,itemId),JSON.stringify(stat));
+  localStorage.setItem(`${activeProfile}:mtime`,new Date().toISOString());
+  if(typeof schedulePush==='function')schedulePush();
+}
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+let learnState=null;
+
+function showLearn(moduleId){
+  closeMenu&&closeMenu();
+  const mod=getAllLearnModules().find(m=>m.id===moduleId);
+  if(!mod){alert('Lernmodul nicht gefunden: '+moduleId);return;}
+  learnState={moduleId,mod,tab:'fc'};
+  document.getElementById('learnTitle').textContent=(mod.icon||'📖')+' '+mod.name;
+  document.getElementById('learnOverlay').style.display='flex';
+  switchLearnTab('fc');
+}
+
+function hideLearn(){
+  document.getElementById('learnOverlay').style.display='none';
+  learnState=null;
+}
+
+function switchLearnTab(tab){
+  if(!learnState)return;
+  learnState.tab=tab;
+  document.querySelectorAll('.learn-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  if(tab==='fc')renderFlashcardStart();
+  else if(tab==='q')renderQuizStart();
+  else if(tab==='t')renderTextStart();
+}
+
+// ── Flashcards ────────────────────────────────────────────
+function renderFlashcardStart(){
+  const mod=learnState.mod;
+  // Sort: cards with fewer correct-in-a-row first, shuffled within
+  const cards=mod.flashcards.map(c=>{
+    const s=getLearnStat(mod.id,'fc',c.id);
+    return{card:c,streak:s.streak||0,seen:s.seen||0};
+  });
+  cards.sort((a,b)=>a.streak-b.streak||Math.random()-.5);
+  learnState.fc={queue:cards.map(x=>x.card.id),byId:Object.fromEntries(mod.flashcards.map(c=>[c.id,c])),idx:0,flipped:false,sessionOk:0,sessionTotal:0};
+  renderFlashcard();
+}
+
+function renderFlashcard(){
+  const st=learnState.fc;
+  const el=document.getElementById('learnContent');
+  if(st.idx>=st.queue.length){
+    el.innerHTML=`<div class="learn-done"><div class="learn-done-emoji">🎉</div><div class="learn-done-msg">Durch! ${st.sessionOk}/${st.sessionTotal} gewusst.</div><button class="qnext" onclick="renderFlashcardStart()">Noch eine Runde</button></div>`;
+    return;
+  }
+  const c=st.byId[st.queue[st.idx]];
+  const stat=getLearnStat(learnState.moduleId,'fc',c.id);
+  const progressPct=Math.round(st.idx/st.queue.length*100);
+  if(!st.flipped){
+    el.innerHTML=`
+      <div class="learn-stats"><span>Karte ${st.idx+1}/${st.queue.length}</span><span>Streak: ${stat.streak||0} · gesehen: ${stat.seen||0}</span></div>
+      <div class="learn-bar"><div class="learn-bar-fill" style="width:${progressPct}%"></div></div>
+      <div class="fcard" onclick="flipFlashcard()">
+        <div class="fcard-front">${esc(c.term)}</div>
+        <div class="fcard-hint">Zum Umdrehen klicken</div>
+      </div>`;
+  }else{
+    el.innerHTML=`
+      <div class="learn-stats"><span>Karte ${st.idx+1}/${st.queue.length}</span><span>Streak: ${stat.streak||0} · gesehen: ${stat.seen||0}</span></div>
+      <div class="learn-bar"><div class="learn-bar-fill" style="width:${progressPct}%"></div></div>
+      <div class="fcard" onclick="flipFlashcard()">
+        <div class="fcard-back-term">${esc(c.term)}</div>
+        <div class="fcard-def">${esc(c.def)}</div>
+        ${c.ex?`<div class="fcard-ex">Beispiel: ${esc(c.ex)}</div>`:''}
+      </div>
+      <div class="learn-btns">
+        <button class="learn-btn no" onclick="markFlashcard(false)">❌ Nicht gewusst</button>
+        <button class="learn-btn ok" onclick="markFlashcard(true)">✅ Gewusst</button>
+      </div>`;
+  }
+}
+
+function flipFlashcard(){
+  if(!learnState||!learnState.fc)return;
+  learnState.fc.flipped=true;
+  renderFlashcard();
+}
+
+function markFlashcard(ok){
+  const st=learnState.fc;
+  const cid=st.queue[st.idx];
+  const stat=getLearnStat(learnState.moduleId,'fc',cid);
+  stat.seen=(stat.seen||0)+1;
+  stat.streak=ok?(stat.streak||0)+1:0;
+  stat.lastOk=ok;
+  setLearnStat(learnState.moduleId,'fc',cid,stat);
+  st.sessionTotal++; if(ok)st.sessionOk++;
+  // If wrong: requeue ~4 cards later
+  if(!ok){
+    const reinsert=Math.min(st.idx+4,st.queue.length);
+    st.queue.splice(reinsert,0,cid);
+  }
+  st.idx++;
+  st.flipped=false;
+  renderFlashcard();
+}
+
+// ── Quiz ──────────────────────────────────────────────────
+function renderQuizStart(){
+  const mod=learnState.mod;
+  // Build queue: items that still have wrong>0 first, then by lowest correct count
+  const items=mod.quiz.map(q=>{
+    const s=getLearnStat(mod.id,'q',q.id);
+    return{item:q,correct:s.correct||0,wrong:s.wrong||0};
+  });
+  items.sort((a,b)=>(b.wrong-a.wrong)||(a.correct-b.correct)||Math.random()-.5);
+  learnState.q={queue:items.map(x=>x.item.id),byId:Object.fromEntries(mod.quiz.map(q=>[q.id,q])),idx:0,sessionOk:0,sessionWrong:0,picked:null,order:null};
+  renderQuiz();
+}
+
+function renderQuiz(){
+  const st=learnState.q;
+  const el=document.getElementById('learnContent');
+  if(st.idx>=st.queue.length){
+    el.innerHTML=`<div class="learn-done"><div class="learn-done-emoji">🏁</div><div class="learn-done-msg">Quiz fertig!</div><div>Richtig beim 1. Versuch: ${st.sessionOk} · Falschversuche: ${st.sessionWrong}</div><button class="qnext" onclick="renderQuizStart()">Noch eine Runde</button></div>`;
+    return;
+  }
+  const q=st.byId[st.queue[st.idx]];
+  const stat=getLearnStat(learnState.moduleId,'q',q.id);
+  const progressPct=Math.round(st.idx/st.queue.length*100);
+  if(!st.order||st.order.qid!==q.id){
+    // Shuffle options and remember mapping
+    const idxs=shuffle(q.opts.map((_,i)=>i));
+    st.order={qid:q.id,idxs};
+  }
+  const picked=st.picked;
+  let html=`
+    <div class="learn-stats"><span>Frage ${st.idx+1}/${st.queue.length}</span><span>✅ ${stat.correct||0} · ❌ ${stat.wrong||0}</span></div>
+    <div class="learn-bar"><div class="learn-bar-fill" style="width:${progressPct}%"></div></div>
+    <div class="tquestion">${esc(q.q)}</div>`;
+  st.order.idxs.forEach((origIdx,displayIdx)=>{
+    let cls='qopt';
+    let disabled='';
+    if(picked!==null){
+      disabled='disabled';
+      if(origIdx===q.correct)cls+=' '+(picked===origIdx?'sel-ok':'reveal-ok');
+      else if(origIdx===picked)cls+=' sel-no';
+    }
+    html+=`<button class="${cls}" ${disabled} onclick="pickQuiz(${origIdx})">${esc(q.opts[origIdx])}</button>`;
+  });
+  if(picked!==null){
+    const ok=picked===q.correct;
+    html+=`<div class="qexpl ${ok?'ok':'no'}"><b>${ok?'Richtig! ✅':'Leider falsch ❌'}</b>${esc(q.expl)}</div>`;
+    html+=`<button class="qnext" onclick="nextQuiz()">${st.idx+1>=st.queue.length?'Abschließen':'Weiter →'}</button>`;
+  }
+  el.innerHTML=html;
+}
+
+function pickQuiz(origIdx){
+  const st=learnState.q;
+  if(st.picked!==null)return;
+  st.picked=origIdx;
+  const q=st.byId[st.queue[st.idx]];
+  const stat=getLearnStat(learnState.moduleId,'q',q.id);
+  if(origIdx===q.correct){stat.correct=(stat.correct||0)+1;st.sessionOk++;}
+  else{stat.wrong=(stat.wrong||0)+1;st.sessionWrong++;
+    // Requeue ~3 places later
+    const reinsert=Math.min(st.idx+3,st.queue.length);
+    st.queue.splice(reinsert,0,q.id);
+  }
+  setLearnStat(learnState.moduleId,'q',q.id,stat);
+  renderQuiz();
+}
+
+function nextQuiz(){
+  const st=learnState.q;
+  st.idx++;
+  st.picked=null;
+  st.order=null;
+  renderQuiz();
+}
+
+// ── Text analysis ─────────────────────────────────────────
+function renderTextStart(){
+  const mod=learnState.mod;
+  const items=mod.texts.map(t=>{
+    const s=getLearnStat(mod.id,'t',t.id);
+    return{item:t,correct:s.correct||0,wrong:s.wrong||0};
+  });
+  items.sort((a,b)=>(b.wrong-a.wrong)||(a.correct-b.correct)||Math.random()-.5);
+  learnState.t={queue:items.map(x=>x.item.id),byId:Object.fromEntries(mod.texts.map(t=>[t.id,t])),idx:0,sessionOk:0,sessionWrong:0,picked:null,order:null};
+  renderTextEx();
+}
+
+function renderTextEx(){
+  const st=learnState.t;
+  const el=document.getElementById('learnContent');
+  if(st.idx>=st.queue.length){
+    el.innerHTML=`<div class="learn-done"><div class="learn-done-emoji">📚</div><div class="learn-done-msg">Textanalyse fertig!</div><div>Richtig beim 1. Versuch: ${st.sessionOk} · Falschversuche: ${st.sessionWrong}</div><button class="qnext" onclick="renderTextStart()">Noch eine Runde</button></div>`;
+    return;
+  }
+  const t=st.byId[st.queue[st.idx]];
+  const stat=getLearnStat(learnState.moduleId,'t',t.id);
+  const progressPct=Math.round(st.idx/st.queue.length*100);
+  if(!st.order||st.order.tid!==t.id){
+    const idxs=shuffle(t.choices.map((_,i)=>i));
+    st.order={tid:t.id,idxs};
+  }
+  const picked=st.picked;
+  const question=t.kind==='perspektive'?'Welche Erzählperspektive liegt vor?':'Welche Form der Personenrede liegt vor?';
+  let html=`
+    <div class="learn-stats"><span>Text ${st.idx+1}/${st.queue.length}</span><span>✅ ${stat.correct||0} · ❌ ${stat.wrong||0}</span></div>
+    <div class="learn-bar"><div class="learn-bar-fill" style="width:${progressPct}%"></div></div>
+    <div class="tmeta">${esc(t.author)} · ${t.year}</div>
+    <div class="twork">${esc(t.work)}</div>
+    <div class="ttext">${esc(t.text)}</div>
+    <div class="tquestion">${question}</div>`;
+  st.order.idxs.forEach(origIdx=>{
+    let cls='qopt';let disabled='';
+    if(picked!==null){
+      disabled='disabled';
+      if(origIdx===t.correct)cls+=' '+(picked===origIdx?'sel-ok':'reveal-ok');
+      else if(origIdx===picked)cls+=' sel-no';
+    }
+    html+=`<button class="${cls}" ${disabled} onclick="pickText(${origIdx})">${esc(t.choices[origIdx])}</button>`;
+  });
+  if(picked!==null){
+    const ok=picked===t.correct;
+    html+=`<div class="qexpl ${ok?'ok':'no'}"><b>${ok?'Richtig! ✅':'Leider falsch ❌'}</b>${esc(t.expl)}</div>`;
+    html+=`<button class="qnext" onclick="nextText()">${st.idx+1>=st.queue.length?'Abschließen':'Weiter →'}</button>`;
+  }
+  el.innerHTML=html;
+}
+
+function pickText(origIdx){
+  const st=learnState.t;
+  if(st.picked!==null)return;
+  st.picked=origIdx;
+  const t=st.byId[st.queue[st.idx]];
+  const stat=getLearnStat(learnState.moduleId,'t',t.id);
+  if(origIdx===t.correct){stat.correct=(stat.correct||0)+1;st.sessionOk++;}
+  else{stat.wrong=(stat.wrong||0)+1;st.sessionWrong++;
+    const reinsert=Math.min(st.idx+3,st.queue.length);
+    st.queue.splice(reinsert,0,t.id);
+  }
+  setLearnStat(learnState.moduleId,'t',t.id,stat);
+  renderTextEx();
+}
+
+function nextText(){
+  const st=learnState.t;
+  st.idx++;
+  st.picked=null;
+  st.order=null;
+  renderTextEx();
 }
 
 // ═══════════════════════════════════════════════════════════
