@@ -152,6 +152,23 @@ body.dark .ov-head.ov-me{background:#1e3a5f;color:#7eb3ff}
 body.dark .ov-unit-cnt,body.dark .ov-done-date,body.dark .ov-progress{color:#6b7280}
 body.dark .ov-none{color:#4b5563}
 body.dark .ov-bar-wrap{background:#374151}
+/* ── GitHub sync status + update banner ── */
+.sync-status{display:inline-block;margin-left:6px;font-size:.9rem;cursor:pointer;user-select:none;opacity:.9;vertical-align:middle}
+.sync-status:hover{opacity:1}
+.sync-status.s-sync{animation:syncSpin 1.2s linear infinite}
+.sync-status.s-err{color:#fbbf24}
+.sync-status.s-ok{color:#86efac}
+.sync-status.s-none{opacity:.55}
+@keyframes syncSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.update-banner{position:fixed;top:0;left:0;right:0;background:linear-gradient(90deg,#f59e0b,#ea580c);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;font-size:.9rem;z-index:400;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.update-banner b{font-weight:700}
+.update-banner .update-btn{background:#fff;color:#ea580c;border:none;border-radius:8px;padding:6px 14px;font-weight:700;cursor:pointer;font-size:.85rem}
+.update-banner .update-btn:hover{background:#fef3c7}
+.update-banner a{color:#fff;text-decoration:underline;font-weight:600}
+.update-banner .update-close{margin-left:auto;background:transparent;border:none;color:#fff;font-size:1.1rem;cursor:pointer;padding:2px 8px;border-radius:6px}
+.update-banner .update-close:hover{background:rgba(255,255,255,.2)}
+body.has-banner{padding-top:46px}
+body.dark .update-banner{background:linear-gradient(90deg,#b45309,#9a3412)}
 /* ── Special character picker ── */
 .char-picker{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
 .char-btn{padding:6px 11px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-size:1rem;line-height:1;cursor:pointer;transition:border-color .12s,background .12s,transform .1s,color .12s;color:#333;font-family:inherit;min-width:36px;text-align:center;user-select:none}
@@ -260,7 +277,7 @@ body.dark .load-link{color:#7eb3ff}
 
 <!-- Profile bar -->
 <div class="p-bar" id="pBar">
-  <span>👤 <strong id="pbName">–</strong></span>
+  <span>👤 <strong id="pbName">–</strong><span class="sync-status s-none" id="syncStatus" onclick="showSyncSettings()" title="Kein Sync-Token">☁️🔒</span></span>
   <div style="display:flex;align-items:center;gap:8px">
     <button class="p-bar-btn" id="dmToggle" onclick="toggleDarkMode()" title="Dark Mode umschalten" style="font-size:1rem;padding:3px 8px">🌙</button>
     <div class="dropdown-wrap">
@@ -320,6 +337,31 @@ body.dark .load-link{color:#7eb3ff}
       <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="doImport()">Importieren</button>
     </div>
     <button class="btn btn-outline" style="width:100%" onclick="closeImport()">Abbrechen</button>
+  </div>
+</div>
+
+<!-- GitHub sync settings overlay -->
+<div class="overlay" id="syncSettingsOverlay" style="display:none">
+  <div class="overlay-inner">
+    <h2>☁️ GitHub-Sync</h2>
+    <p>Synchronisiert Spielstände aller Familienmitglieder automatisch über GitHub. Der Token wird nur auf diesem Gerät gespeichert.</p>
+    <label style="display:block;margin:0 0 6px;font-size:.82rem;color:var(--gray);font-weight:600">Sync-Token</label>
+    <input class="overlay-input" id="syncToken" type="password" placeholder="github_pat_... oder ghp_..." autocomplete="off" spellcheck="false">
+    <label style="display:block;margin:4px 0 6px;font-size:.82rem;color:var(--gray);font-weight:600">Gerätename (optional)</label>
+    <input class="overlay-input" id="syncDevice" type="text" placeholder="z.B. Papa-PC" maxlength="30">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="btn btn-outline btn-sm" onclick="testSyncConnection()">🔍 Verbindung testen</button>
+      <button class="btn btn-primary btn-sm" onclick="saveSyncSettings()">💾 Speichern</button>
+      <button class="btn btn-outline btn-sm" onclick="manualSync()">🔄 Jetzt synchronisieren</button>
+    </div>
+    <div id="syncMessage" style="font-size:.85rem;color:var(--blue);min-height:1.2em;margin-bottom:10px;font-weight:600"></div>
+    <div style="font-size:.78rem;color:var(--gray);margin-bottom:14px;padding:8px 10px;background:var(--light);border-radius:6px">
+      Letzter Sync: <span id="syncLast">—</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;gap:8px">
+      <button class="btn btn-outline btn-sm" style="color:#dc3545;border-color:#dc3545" onclick="clearSyncToken()">🗑 Token löschen</button>
+      <button class="btn btn-outline" onclick="hideSyncSettings()">Schließen</button>
+    </div>
   </div>
 </div>
 
@@ -843,6 +885,8 @@ function save(){
   localStorage.setItem(pfxS('m'),mode);
   localStorage.setItem(pfxS('u'),JSON.stringify([...activeUnits]));
   localStorage.setItem(pfxP('lang'),activeSetId);
+  markProfileMtime();
+  schedulePush();
 }
 
 function _migrateOldKeys(){
@@ -1002,6 +1046,8 @@ function renderProfileMenu(){
     <button onclick="submitMenuProfile()">+</button>
   </div>`;
   html+=`<div class="dropdown-divider"></div>
+  <div class="dropdown-item" onclick="showSyncSettings()">☁️ GitHub-Sync</div>
+  <div class="dropdown-divider"></div>
   <div class="dropdown-item save" onclick="saveProfileToFile()">💾 Spielstand speichern</div>
   <div class="dropdown-item load" onclick="loadProfileFromFile()">📂 Spielstand laden</div>
   <div class="dropdown-divider"></div>
@@ -1688,6 +1734,293 @@ function loadDarkMode(){
 }
 
 // ═══════════════════════════════════════════════════════════
+// GITHUB SYNC & AUTO-UPDATE
+// ═══════════════════════════════════════════════════════════
+const APP_REPO      = 'JuergenPod/VocabularyCheck';
+const SAVES_REPO    = 'JuergenPod/VocabularyCheck-Saves';
+const SAVES_FILE    = 'savestates.json';
+
+let ghToken='';
+let remoteFileSha='';
+let pushTimer=null;
+let pushInFlight=false;
+let pushPending=false;
+
+// ── Base64 UTF-8 (handles umlauts) ────────────────
+function b64encUtf8(s){return btoa(unescape(encodeURIComponent(s)));}
+function b64decUtf8(s){return decodeURIComponent(escape(atob(s.replace(/\s/g,''))));}
+
+// ── GitHub API helpers ────────────────────────────
+async function ghFetchFile(){
+  const r=await fetch(`https://api.github.com/repos/${SAVES_REPO}/contents/${SAVES_FILE}`,{
+    headers:{'Accept':'application/vnd.github+json','Authorization':`Bearer ${ghToken}`},
+    cache:'no-store'
+  });
+  if(r.status===404)return{data:{lastUpdated:'',profiles:{}},sha:null,exists:false};
+  if(!r.ok)throw new Error('GET '+r.status);
+  const j=await r.json();
+  let data;try{data=JSON.parse(b64decUtf8(j.content));}catch(e){data={lastUpdated:'',profiles:{}};}
+  return{data,sha:j.sha,exists:true};
+}
+
+async function ghPutFile(data,sha){
+  const body={message:`sync ${activeProfile||'save'} @ ${new Date().toISOString().slice(0,16)}Z`,content:b64encUtf8(JSON.stringify(data,null,2))};
+  if(sha)body.sha=sha;
+  return fetch(`https://api.github.com/repos/${SAVES_REPO}/contents/${SAVES_FILE}`,{
+    method:'PUT',
+    headers:{'Accept':'application/vnd.github+json','Authorization':`Bearer ${ghToken}`,'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  });
+}
+
+// ── Snapshot build & merge ────────────────────────
+function buildLocalSnapshot(){
+  let profs=[];try{profs=JSON.parse(localStorage.getItem('sq_profiles')||'[]');}catch(x){}
+  const out={lastUpdated:new Date().toISOString(),profiles:{}};
+  const byProfile={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);if(!k)continue;
+    const idx=k.indexOf(':');if(idx<1)continue;
+    const p=k.slice(0,idx);if(!profs.includes(p))continue;
+    (byProfile[p]=byProfile[p]||{})[k]=localStorage.getItem(k);
+  }
+  const device=localStorage.getItem('sq_gh_device')||'';
+  profs.forEach(p=>{
+    const state=byProfile[p]||{};
+    const mtime=localStorage.getItem(`${p}:mtime`)||'';
+    out.profiles[p]={lastModified:mtime,device,state};
+  });
+  return out;
+}
+
+function mergeRemoteIntoLocal(remote){
+  if(!remote||!remote.profiles)return;
+  let localProfs=[];try{localProfs=JSON.parse(localStorage.getItem('sq_profiles')||'[]');}catch(x){}
+  Object.entries(remote.profiles).forEach(([p,rec])=>{
+    const localMtime=localStorage.getItem(`${p}:mtime`)||'';
+    const remoteMtime=rec.lastModified||'';
+    const isNew=!localProfs.includes(p);
+    const remoteNewer=remoteMtime&&remoteMtime>localMtime;
+    if(isNew||remoteNewer){
+      // overwrite all profile:* keys
+      const toRemove=[];
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(k&&k.startsWith(`${p}:`))toRemove.push(k);
+      }
+      toRemove.forEach(k=>localStorage.removeItem(k));
+      Object.entries(rec.state||{}).forEach(([k,v])=>{
+        if(k!=='sq_profiles')localStorage.setItem(k,v);
+      });
+      if(remoteMtime)localStorage.setItem(`${p}:mtime`,remoteMtime);
+      if(isNew)localProfs.push(p);
+    }
+  });
+  localStorage.setItem('sq_profiles',JSON.stringify(localProfs));
+}
+
+// ── Sync operations ───────────────────────────────
+async function pullFromGitHub(){
+  if(!ghToken)return;
+  try{
+    updateSyncStatus('sync');
+    const{data,sha,exists}=await ghFetchFile();
+    remoteFileSha=sha||'';
+    localStorage.setItem('sq_gh_file_sha',remoteFileSha);
+    if(exists)mergeRemoteIntoLocal(data);
+    localStorage.setItem('sq_gh_last_sync',new Date().toISOString());
+    updateSyncStatus('ok');
+  }catch(e){
+    updateSyncStatus('err',e.message);
+  }
+}
+
+async function pushToGitHub(){
+  if(!ghToken)return;
+  if(pushInFlight){pushPending=true;return;}
+  pushInFlight=true;
+  try{
+    updateSyncStatus('sync');
+    let payload=buildLocalSnapshot();
+    let r=await ghPutFile(payload,remoteFileSha);
+    if(r.status===409||r.status===422){
+      const fresh=await ghFetchFile();
+      mergeRemoteIntoLocal(fresh.data);
+      remoteFileSha=fresh.sha||'';
+      payload=buildLocalSnapshot();
+      r=await ghPutFile(payload,remoteFileSha);
+    }
+    if(r.ok){
+      const j=await r.json();
+      if(j&&j.content&&j.content.sha)remoteFileSha=j.content.sha;
+      localStorage.setItem('sq_gh_file_sha',remoteFileSha);
+      localStorage.setItem('sq_gh_last_sync',new Date().toISOString());
+      updateSyncStatus('ok');
+    }else{
+      updateSyncStatus('err','HTTP '+r.status);
+    }
+  }catch(e){
+    updateSyncStatus('err',e.message);
+  }finally{
+    pushInFlight=false;
+    if(pushPending){pushPending=false;schedulePush();}
+  }
+}
+
+function schedulePush(){
+  if(!ghToken)return;
+  clearTimeout(pushTimer);
+  pushTimer=setTimeout(pushToGitHub,5000);
+}
+
+function markProfileMtime(){
+  if(activeProfile)localStorage.setItem(`${activeProfile}:mtime`,new Date().toISOString());
+}
+
+// ── Auto-update check (localStorage-based: no manual SHA bump needed) ─
+async function checkForUpdate(){
+  try{
+    const r=await fetch(`https://api.github.com/repos/${APP_REPO}/commits/main`,{
+      headers:{'Accept':'application/vnd.github+json'},
+      cache:'no-store'
+    });
+    if(!r.ok)return;
+    const c=await r.json();
+    const remote=(c.sha||'').slice(0,7);
+    if(!remote)return;
+    const seen=localStorage.getItem('sq_seen_sha')||'';
+    if(!seen){
+      // First ever check: silently record current remote version, no banner
+      localStorage.setItem('sq_seen_sha',remote);
+      return;
+    }
+    if(remote===seen)return;
+    const msg=(c.commit&&c.commit.message?c.commit.message.split('\n')[0]:'').slice(0,80);
+    showUpdateBanner(remote,msg);
+  }catch(e){}
+}
+
+function showUpdateBanner(sha,msg){
+  let b=document.getElementById('updateBanner');
+  if(!b){
+    b=document.createElement('div');
+    b.id='updateBanner';b.className='update-banner';
+    document.body.insertBefore(b,document.body.firstChild);
+  }
+  b.dataset.sha=sha;
+  const isFile=location.protocol==='file:';
+  const action=isFile
+    ?`<a href="https://raw.githubusercontent.com/${APP_REPO}/main/index.html" target="_blank">index.html neu laden</a>`
+    :`<button class="update-btn" onclick="applyUpdate('${sha}')">Aktualisieren</button>`;
+  b.innerHTML=`<span>🆕 Neue Version: <b>${esc(msg||sha)}</b></span> ${action} <button class="update-close" onclick="dismissUpdate()" title="Schließen">✕</button>`;
+  document.body.classList.add('has-banner');
+}
+
+function applyUpdate(sha){
+  localStorage.setItem('sq_seen_sha',sha);
+  // Best-effort jsDelivr cache purge (fire-and-forget, no-cors)
+  try{fetch(`https://purge.jsdelivr.net/gh/${APP_REPO}@main/index.html`,{mode:'no-cors'}).catch(()=>{});}catch(e){}
+  // Small delay to let purge propagate, then reload with cache-bust
+  setTimeout(()=>{location.href=location.pathname+'?v='+sha;},700);
+}
+
+function dismissUpdate(){
+  const b=document.getElementById('updateBanner');
+  if(b){
+    if(b.dataset.sha)localStorage.setItem('sq_seen_sha',b.dataset.sha);
+    b.remove();
+  }
+  document.body.classList.remove('has-banner');
+}
+
+// ── Status indicator ──────────────────────────────
+function updateSyncStatus(state,err){
+  const el=document.getElementById('syncStatus');
+  if(!el)return;
+  const map={
+    none:{icon:'☁️🔒',cls:'s-none',title:'Kein Sync-Token – klicken zum Einrichten'},
+    ok:{icon:'☁️✓',cls:'s-ok',title:'Synchronisiert'},
+    sync:{icon:'☁️↻',cls:'s-sync',title:'Synchronisiere…'},
+    err:{icon:'☁️⚠',cls:'s-err',title:'Sync-Fehler: '+(err||'unbekannt')}
+  };
+  const m=map[state]||map.none;
+  el.textContent=m.icon;
+  el.title=m.title;
+  el.className='sync-status '+m.cls;
+}
+
+// ── Sync settings overlay ─────────────────────────
+function showSyncSettings(){
+  closeMenu();
+  const o=document.getElementById('syncSettingsOverlay');
+  if(!o)return;
+  const last=localStorage.getItem('sq_gh_last_sync');
+  document.getElementById('syncToken').value=ghToken||'';
+  document.getElementById('syncDevice').value=localStorage.getItem('sq_gh_device')||'';
+  document.getElementById('syncLast').textContent=last?new Date(last).toLocaleString('de-DE'):'—';
+  document.getElementById('syncMessage').textContent='';
+  o.style.display='flex';
+}
+
+function hideSyncSettings(){
+  const o=document.getElementById('syncSettingsOverlay');
+  if(o)o.style.display='none';
+}
+
+function saveSyncSettings(){
+  const t=document.getElementById('syncToken').value.trim();
+  const d=document.getElementById('syncDevice').value.trim();
+  ghToken=t;
+  if(t)localStorage.setItem('sq_gh_token',t);else localStorage.removeItem('sq_gh_token');
+  if(d)localStorage.setItem('sq_gh_device',d);else localStorage.removeItem('sq_gh_device');
+  updateSyncStatus(t?'ok':'none');
+  setSyncMessage('✅ Gespeichert');
+}
+
+async function testSyncConnection(){
+  const t=document.getElementById('syncToken').value.trim();
+  if(!t){setSyncMessage('⚠️ Bitte Token eingeben');return;}
+  setSyncMessage('🔍 Prüfe…');
+  try{
+    const r=await fetch(`https://api.github.com/repos/${SAVES_REPO}`,{
+      headers:{'Accept':'application/vnd.github+json','Authorization':`Bearer ${t}`}
+    });
+    if(r.ok)setSyncMessage('✅ Verbindung erfolgreich — Repo gefunden');
+    else if(r.status===401)setSyncMessage('❌ Token ungültig (401)');
+    else if(r.status===404)setSyncMessage('❌ Repo nicht gefunden (404) — prüfe Name/Berechtigung');
+    else setSyncMessage('❌ Fehler '+r.status);
+  }catch(e){setSyncMessage('❌ Netzwerkfehler: '+e.message);}
+}
+
+async function manualSync(){
+  const t=document.getElementById('syncToken').value.trim();
+  if(!t){setSyncMessage('⚠️ Bitte zuerst Token eingeben und speichern');return;}
+  saveSyncSettings();
+  setSyncMessage('🔄 Synchronisiere…');
+  await pullFromGitHub();
+  await pushToGitHub();
+  const last=localStorage.getItem('sq_gh_last_sync');
+  document.getElementById('syncLast').textContent=last?new Date(last).toLocaleString('de-DE'):'—';
+  setSyncMessage('✅ Fertig');
+  loadProfiles();
+  if(activeProfile){load();buildPool();renderAll();}
+}
+
+function clearSyncToken(){
+  if(!confirm('Token wirklich löschen? Sync wird dann nicht mehr laufen.'))return;
+  localStorage.removeItem('sq_gh_token');
+  ghToken='';
+  const i=document.getElementById('syncToken');if(i)i.value='';
+  updateSyncStatus('none');
+  setSyncMessage('Token entfernt');
+}
+
+function setSyncMessage(m){
+  const el=document.getElementById('syncMessage');
+  if(el)el.textContent=m;
+}
+
+// ═══════════════════════════════════════════════════════════
 // STREAK MILESTONE ANIMATION
 // ═══════════════════════════════════════════════════════════
 const MILESTONES=[
@@ -1786,13 +2119,43 @@ document.addEventListener('click',e=>{
 loadDarkMode();
 loadProfiles();
 _fixMirroredMigration();   // one-time cleanup of falsely mirrored direction data
-if(!activeProfile){
-  showProfileOverlay();
-}else{
-  load();buildPool();renderAll();
-}
 
-window.addEventListener('beforeunload',()=>saveStreakEntry());
+// GitHub sync: load token and boot sync flow
+ghToken=localStorage.getItem('sq_gh_token')||'';
+remoteFileSha=localStorage.getItem('sq_gh_file_sha')||'';
+updateSyncStatus(ghToken?'ok':'none');
+checkForUpdate();   // fire-and-forget update check
+
+(async()=>{
+  if(ghToken){
+    await pullFromGitHub();
+    // After pull, reload profile list (remote might have added profiles)
+    loadProfiles();
+  }
+  if(!activeProfile){
+    showProfileOverlay();
+  }else{
+    load();buildPool();renderAll();
+  }
+})();
+
+window.addEventListener('beforeunload',()=>{
+  saveStreakEntry();
+  // Flush pending push synchronously via sendBeacon-like — fetch with keepalive
+  if(ghToken&&pushTimer){
+    clearTimeout(pushTimer);
+    try{
+      const payload=buildLocalSnapshot();
+      const body={message:'sync on unload',content:b64encUtf8(JSON.stringify(payload,null,2))};
+      if(remoteFileSha)body.sha=remoteFileSha;
+      fetch(`https://api.github.com/repos/${SAVES_REPO}/contents/${SAVES_FILE}`,{
+        method:'PUT',keepalive:true,
+        headers:{'Accept':'application/vnd.github+json','Authorization':`Bearer ${ghToken}`,'Content-Type':'application/json'},
+        body:JSON.stringify(body)
+      });
+    }catch(x){}
+  }
+});
 </script>
 </body>
 </html>
