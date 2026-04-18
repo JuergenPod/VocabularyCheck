@@ -125,6 +125,30 @@ h1{font-size:1.2rem;font-weight:700;color:#1a1a2e}
 .import-field input:focus{border-color:var(--blue)}
 .import-check{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:.88rem;color:#333}
 .import-preview{background:var(--light);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.82rem;color:var(--gray)}
+/* ── Lektionen-Übersicht ── */
+.ov-wrap{overflow-x:auto;margin-top:14px}
+.ov-grid{display:grid;background:var(--border);gap:1px;border-radius:10px;overflow:hidden;min-width:280px}
+.ov-cell{background:#fff;padding:9px 12px;display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:72px}
+.ov-head{background:var(--light);font-weight:700;font-size:.75rem;color:#1a1a2e;text-align:center;align-items:center}
+.ov-head.ov-me{background:#e8f0ff;color:var(--blue)}
+.ov-unit{background:var(--light);font-weight:700;color:#1a1a2e;font-size:.82rem;min-width:90px}
+.ov-unit-cnt{font-size:.67rem;color:var(--gray);font-weight:400}
+.ov-done{align-items:center;text-align:center;color:var(--green);font-size:1.05rem;font-weight:700}
+.ov-done-date{font-size:.62rem;color:var(--gray);font-weight:400}
+.ov-none{align-items:center;text-align:center;color:var(--border);font-size:1.1rem}
+.ov-partial{align-items:stretch;gap:4px}
+.ov-bar-wrap{background:var(--border);border-radius:3px;height:5px;overflow:hidden}
+.ov-bar{height:100%;background:linear-gradient(90deg,var(--blue),#0066cc);transition:width .4s;border-radius:3px}
+.ov-progress{font-size:.72rem;color:var(--gray);text-align:center}
+.ov-sum{background:var(--light);text-align:center;align-items:center;font-size:.82rem;font-weight:700;color:#1a1a2e}
+.ov-sum-label{background:var(--light);font-weight:700;color:#1a1a2e;font-size:.82rem;min-width:90px}
+body.dark .ov-grid{background:#374151}
+body.dark .ov-cell{background:#1f2937}
+body.dark .ov-head,body.dark .ov-unit,body.dark .ov-sum,body.dark .ov-sum-label{background:#2d3748;color:#f3f4f6}
+body.dark .ov-head.ov-me{background:#1e3a5f;color:#7eb3ff}
+body.dark .ov-unit-cnt,body.dark .ov-done-date,body.dark .ov-progress{color:#6b7280}
+body.dark .ov-none{color:#4b5563}
+body.dark .ov-bar-wrap{background:#374151}
 @media(max-width:480px){.container{padding:10px}.q-word{font-size:1.5rem}.p-grid{grid-template-columns:1fr}.header-row2{flex-direction:column;align-items:flex-start}}
 /* ── Dark mode ── */
 body,
@@ -166,7 +190,7 @@ body.dark .prog-info{color:#9ca3af}
 body.dark .stats{color:#9ca3af}
 body.dark .q-label,body.dark .q-unit,body.dark .hint{color:#9ca3af}
 body.dark .unit-summary{color:#9ca3af}
-body.dark .unit-header>span:first-child{color:#f3f4f6}
+body.dark .unit-header>span:first-child{color:#f3f4f6!important}
 body.dark .unit-toggle-arrow{color:#9ca3af}
 body.dark .uchip{background:#2d3748;border-color:#4b5563;color:#9ca3af}
 body.dark .uchip.on{background:var(--blue);border-color:var(--blue);color:#fff}
@@ -349,6 +373,17 @@ body.dark .load-link{color:#7eb3ff}
     <span id="historyBest"></span>
   </div>
   <div class="streak-list" id="historyList"><span class="no-history">Noch keine Sessions.</span></div>
+</div>
+
+<!-- Lektionen-Übersicht -->
+<div class="card">
+  <div class="unit-header" onclick="toggleOverview()" style="cursor:pointer">
+    <span style="font-weight:600;color:#1a1a2e" id="ovTitle">📋 Lektionen-Übersicht</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="unit-toggle-arrow" id="overviewArrow">▼</span>
+    </div>
+  </div>
+  <div id="overviewPanel" style="display:none"></div>
 </div>
 
 </div><!-- /container -->
@@ -764,6 +799,7 @@ let sesCorrect=0,streak=0,sesMaxStreak=0;
 let phase='start',proposals=[],lastMsg='';
 let activeUnits=new Set();
 let streakHistory=[];
+let unitCompletions={};  // {unitId: "DD.MM.YY"}
 let unitPanelOpen=false;
 
 // ═══════════════════════════════════════════════════════════
@@ -777,6 +813,7 @@ function save(){
   localStorage.setItem(pfx('c'),JSON.stringify(counts));
   localStorage.setItem(pfx('m'),mode);
   localStorage.setItem(pfx('u'),JSON.stringify([...activeUnits]));
+  localStorage.setItem(pfx('uc'),JSON.stringify(unitCompletions));
   localStorage.setItem(pfxP('lang'),activeSetId);
 }
 
@@ -788,10 +825,14 @@ function load(){
     const su=localStorage.getItem(pfx('u'));
     activeUnits=su?new Set(JSON.parse(su)):new Set(getAllUnits());
     streakHistory=JSON.parse(localStorage.getItem(pfxP('h'))||'[]');
+    unitCompletions=JSON.parse(localStorage.getItem(pfx('uc'))||'{}');
   }catch(e){
     doneSet=new Set();counts={};mode='a-b';
-    activeUnits=new Set(getAllUnits());streakHistory=[];
+    activeUnits=new Set(getAllUnits());streakHistory=[];unitCompletions={};
   }
+  // Migrate: mark units that were already completed before this feature existed
+  getActiveSet().vocab.reduce((m,v)=>{m.has(v.u)?m.get(v.u).push(v):m.set(v.u,[v]);return m;},new Map())
+    .forEach((vocab,u)=>{if(!unitCompletions[u]&&vocab.every(v=>doneSet.has(v.id))){unitCompletions[u]='—';}});
 }
 
 function saveStreakEntry(){
@@ -1149,6 +1190,7 @@ function markCorrect(){
   checkStreakMilestone(streak);
   if(counts[cur.id]>=2){doneSet.add(cur.id);pool=pool.filter(v=>v.id!==cur.id);}
   save();
+  checkUnitCompletion(cur);
   const c=getCorrect(cur);
   lastMsg=doneSet.has(cur.id)
     ?`✓ Richtig! „${c}" — Erledigt! 🎉`
@@ -1165,9 +1207,9 @@ function setMode(m){
 function resetProgress(){
   if(!confirm('Fortschritt für dieses Vokabular zurücksetzen?'))return;
   saveStreakEntry();
-  localStorage.removeItem(pfx('d'));localStorage.removeItem(pfx('c'));
-  doneSet=new Set();counts={};sesCorrect=0;streak=0;sesMaxStreak=0;phase='start';pool=[];cur=null;
-  buildPool();render();updateHistoryDisplay();
+  localStorage.removeItem(pfx('d'));localStorage.removeItem(pfx('c'));localStorage.removeItem(pfx('uc'));
+  doneSet=new Set();counts={};unitCompletions={};sesCorrect=0;streak=0;sesMaxStreak=0;phase='start';pool=[];cur=null;
+  buildPool();renderAll();
 }
 
 function exportDone(){
@@ -1298,7 +1340,7 @@ function render(){
   else if(phase==='complete')card.innerHTML=renderComplete();
 }
 
-function renderAll(){render();updateHistoryDisplay();}
+function renderAll(){render();updateHistoryDisplay();renderUnitOverview();}
 
 function renderStart(){
   const set=getActiveSet();
@@ -1357,6 +1399,88 @@ function renderComplete(){
 <button class="btn btn-primary" style="margin-right:8px" onclick="exportDone()">⬇ Export</button>
 <button class="btn btn-outline" onclick="resetProgress()">↺ Neu starten</button>
 </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// LEKTIONEN-ÜBERSICHT
+// ═══════════════════════════════════════════════════════════
+function checkUnitCompletion(entry){
+  const u=entry.u;
+  if(unitCompletions[u])return;
+  const vocab=getActiveSet().vocab.filter(v=>v.u===u);
+  if(!vocab.length||!vocab.every(v=>doneSet.has(v.id)))return;
+  const d=new Date();
+  unitCompletions[u]=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getFullYear()).slice(2);
+  save();
+  if(overviewOpen)renderUnitOverview();
+}
+
+let overviewOpen=false;
+function toggleOverview(){
+  overviewOpen=!overviewOpen;
+  document.getElementById('overviewPanel').style.display=overviewOpen?'block':'none';
+  document.getElementById('overviewArrow').classList.toggle('open',overviewOpen);
+  if(overviewOpen)renderUnitOverview();
+}
+
+function renderUnitOverview(){
+  const panel=document.getElementById('overviewPanel');
+  if(!panel||!overviewOpen)return;
+  const set=getActiveSet();
+  const units=getAllUnits();
+  const profs=profiles.filter(Boolean);
+  if(!profs.length){
+    panel.innerHTML='<p style="font-size:.82rem;color:var(--gray);margin-top:12px;font-style:italic">Noch keine Profile vorhanden.</p>';
+    return;
+  }
+  // read stored data for every profile
+  const pData=profs.map(p=>{
+    let doneIds=new Set(),uc={};
+    try{
+      doneIds=new Set(JSON.parse(localStorage.getItem(`${p}:${activeSetId}:d`)||'[]'));
+      uc=JSON.parse(localStorage.getItem(`${p}:${activeSetId}:uc`)||'{}');
+      // migrate silently
+      set.vocab.reduce((m,v)=>{m.has(v.u)?m.get(v.u).push(v):m.set(v.u,[v]);return m;},new Map())
+        .forEach((voc,u)=>{if(!uc[u]&&voc.every(v=>doneIds.has(v.id)))uc[u]='—';});
+    }catch(e){}
+    return{name:p,doneIds,uc};
+  });
+  const colDef=`auto ${pData.map(()=>'1fr').join(' ')}`;
+  let h=`<div class="ov-wrap"><div class="ov-grid" style="grid-template-columns:${colDef}">`;
+  // header
+  h+=`<div class="ov-cell ov-head" style="min-width:90px">Einheit</div>`;
+  pData.forEach(pd=>{h+=`<div class="ov-cell ov-head${pd.name===activeProfile?' ov-me':''}">${esc(pd.name)}</div>`;});
+  // unit rows
+  units.forEach(u=>{
+    const vocab=set.vocab.filter(v=>v.u===u);
+    const total=vocab.length;
+    h+=`<div class="ov-cell ov-unit">E${u}<span class="ov-unit-cnt">${total} Wörter</span></div>`;
+    pData.forEach(pd=>{
+      const done=vocab.filter(v=>pd.doneIds.has(v.id)).length;
+      const ts=pd.uc[u];
+      if(ts){
+        h+=`<div class="ov-cell ov-done">✓<span class="ov-done-date">${ts==='—'?'abgeschlossen':ts}</span></div>`;
+      }else if(done===0){
+        h+=`<div class="ov-cell ov-none">–</div>`;
+      }else{
+        const pct=Math.round(done/total*100);
+        h+=`<div class="ov-cell ov-partial"><div class="ov-bar-wrap"><div class="ov-bar" style="width:${pct}%"></div></div><span class="ov-progress">${done}/${total}</span></div>`;
+      }
+    });
+  });
+  // summary row
+  h+=`<div class="ov-cell ov-sum-label">Gesamt</div>`;
+  pData.forEach(pd=>{
+    const cu=units.filter(u=>pd.uc[u]).length;
+    const tw=set.vocab.length;
+    const dw=set.vocab.filter(v=>pd.doneIds.has(v.id)).length;
+    h+=`<div class="ov-cell ov-sum">${cu}/${units.length} Lekt.<span class="ov-unit-cnt">${dw}/${tw} Wörter</span></div>`;
+  });
+  h+=`</div></div>`;
+  panel.innerHTML=h;
+  // fix dark-mode card title color
+  const t=document.getElementById('ovTitle');
+  if(t)t.style.color='';
 }
 
 // ═══════════════════════════════════════════════════════════
