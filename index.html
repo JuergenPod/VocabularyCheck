@@ -732,6 +732,8 @@ function saveStreakEntry(){
   if(streakHistory.length>20)streakHistory=streakHistory.slice(-20);
   localStorage.setItem(pfxP('h'),JSON.stringify(streakHistory));
   sesMaxStreak=0;
+  markProfileMtime();
+  schedulePush();
 }
 
 // ═══════════════════════════════════════════════════════════
