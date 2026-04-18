@@ -1094,7 +1094,9 @@ function getAnswerSide(){return mode==='a-b'?'b':'a';}
 function check(input,entry){
   if(!input.trim())return false;
   const side=getAnswerSide();
-  return stripArt(norm(input),side)===stripArt(norm(getCorrect(entry)),side);
+  const got=stripArt(norm(input),side);
+  const alts=String(getCorrect(entry)).split(',').map(s=>stripArt(norm(s),side)).filter(Boolean);
+  return alts.includes(got);
 }
 
 function makeProposals(entry){
