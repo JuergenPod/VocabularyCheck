@@ -95,6 +95,21 @@ h1{font-size:1.2rem;font-weight:700;color:#1a1a2e}
 .fb{margin-top:18px;padding:11px 14px;border-radius:10px;font-size:.95rem;font-weight:600}
 .fb.ok{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
 .fb.fail{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.x-info{margin-top:14px;display:flex;flex-direction:column;gap:6px;text-align:left;max-width:420px;margin-left:auto;margin-right:auto}
+.x-info>div{background:#f8f9fa;border-radius:8px;padding:8px 12px;font-size:.88rem;color:#374151;line-height:1.4}
+.x-info .x-tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.5px;color:#6366f1;margin-right:8px;text-transform:uppercase}
+.x-info .x-rel .x-tag{color:#d97706}
+.x-info .x-loan .x-tag{color:#059669}
+.lb-table{display:flex;flex-direction:column;gap:4px}
+.lb-row{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:8px 12px;background:#f8f9fa;border-radius:8px;font-size:.92rem}
+.lb-row.me{background:#e7f1ff;border:1px solid #b3d4ff}
+.lb-rank{font-weight:700;color:var(--gray);text-align:center}
+.lb-row.r1 .lb-rank{color:#d4a500}
+.lb-row.r2 .lb-rank{color:#9a9a9a}
+.lb-row.r3 .lb-rank{color:#cd7f32}
+.lb-name{font-weight:600;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-val{font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums}
+.lb-empty{color:var(--gray);font-size:.88rem;padding:10px;text-align:center}
 .center{text-align:center}
 .c-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
 .c-stat{background:var(--light);border-radius:10px;padding:14px}
@@ -230,6 +245,14 @@ body.dark .p-btn.ok{border-color:#4ade80;background:#14291e;color:#4ade80}
 body.dark .p-btn.fail{border-color:#f87171;background:#291414;color:#f87171}
 body.dark .fb.ok{background:#14291e;color:#4ade80;border-color:#2d5a38}
 body.dark .fb.fail{background:#291414;color:#f87171;border-color:#5a2d2d}
+body.dark .x-info>div{background:#2d3748;color:#d1d5db}
+body.dark .x-info .x-tag{color:#a5b4fc}
+body.dark .x-info .x-rel .x-tag{color:#fcd34d}
+body.dark .x-info .x-loan .x-tag{color:#6ee7b7}
+body.dark .lb-row{background:#2d3748}
+body.dark .lb-row.me{background:#1e3a5f;border-color:#3b82f6}
+body.dark .lb-name{color:#f3f4f6}
+body.dark .lb-val{color:#7eb3ff}
 body.dark .c-stat{background:#2d3748}
 body.dark .c-stat-l{color:#9ca3af}
 body.dark .streak-badge{background:#2d3748}
@@ -340,6 +363,31 @@ body.dark .load-link{color:#7eb3ff}
   </div>
 </div>
 
+<!-- Leaderboard overlay -->
+<div class="overlay" id="leaderboardOverlay" style="display:none">
+  <div class="overlay-inner">
+    <h2>🏆 Leaderboard</h2>
+    <p style="margin-bottom:12px">Bestenliste über alle Profile und Vokabel-Sets.</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-outline btn-sm" onclick="refreshLeaderboard()">🔄 Aktualisieren (von GitHub)</button>
+    </div>
+    <div id="leaderboardMessage" style="font-size:.85rem;color:var(--gray);min-height:1.2em;margin-bottom:10px"></div>
+    <div style="display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px">
+      <div>
+        <h3 style="font-size:1rem;margin:0 0 8px;color:var(--blue)">🔥 Top-Streaks</h3>
+        <div id="lbStreaks" class="lb-table"></div>
+      </div>
+      <div>
+        <h3 style="font-size:1rem;margin:0 0 8px;color:var(--blue)">📚 Top-Wörter</h3>
+        <div id="lbWords" class="lb-table"></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="hideLeaderboard()">Schließen</button>
+    </div>
+  </div>
+</div>
+
 <!-- GitHub sync settings overlay -->
 <div class="overlay" id="syncSettingsOverlay" style="display:none">
   <div class="overlay-inner">
@@ -445,393 +493,33 @@ body.dark .load-link{color:#7eb3ff}
 </div>
 
 </div><!-- /container -->
+<!-- Built-in vocabulary sets — each file registers itself in window.VOCAB_REGISTRY -->
+<script src="vocab/es-de.js"></script>
+<script src="vocab/la-de.js"></script>
+<script src="vocab/la3-de.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════
-// BUILT-IN VOCABULARY SET (Spanish → German)
+// BUILT-IN VOCABULARY SETS
+// Each vocab/<id>.js file registers itself in window.VOCAB_REGISTRY.
+// Extension files may set extendsSetId to append entries to an existing set.
 // ═══════════════════════════════════════════════════════════
-const BUILTIN_SET={
-  id:'es-de',name:'Spanisch',langA:'Spanisch',langB:'Deutsch',
-  flagA:'🇪🇸',flagB:'🇩🇪',stripArticlesOnB:true,stripArticlesOnA:false,
-  vocab:[
-{id:1,a:"hola",b:"hallo",u:"0"},
-{id:2,a:"adiós",b:"auf Wiedersehen",u:"0"},
-{id:3,a:"buenos días",b:"guten Morgen",u:"0"},
-{id:4,a:"buenas tardes",b:"guten Tag",u:"0"},
-{id:5,a:"buenas noches",b:"gute Nacht",u:"0"},
-{id:6,a:"¿qué tal?",b:"wie geht's?",u:"0"},
-{id:7,a:"bien",b:"gut",u:"0"},
-{id:8,a:"mal",b:"schlecht",u:"0"},
-{id:9,a:"regular",b:"es geht",u:"0"},
-{id:10,a:"gracias",b:"danke",u:"0"},
-{id:11,a:"de nada",b:"bitte",u:"0"},
-{id:12,a:"por favor",b:"bitte sehr",u:"0"},
-{id:13,a:"perdón",b:"Entschuldigung",u:"0"},
-{id:14,a:"lo siento",b:"es tut mir leid",u:"0"},
-{id:15,a:"sí",b:"ja",u:"0"},
-{id:16,a:"no",b:"nein",u:"0"},
-{id:17,a:"mucho gusto",b:"sehr erfreut",u:"0"},
-{id:18,a:"encantado",b:"angenehm",u:"0"},
-{id:19,a:"el amigo",b:"der Freund",u:"1"},
-{id:20,a:"la amiga",b:"die Freundin",u:"1"},
-{id:21,a:"el padre",b:"der Vater",u:"1"},
-{id:22,a:"la madre",b:"die Mutter",u:"1"},
-{id:23,a:"el hermano",b:"der Bruder",u:"1"},
-{id:24,a:"la hermana",b:"die Schwester",u:"1"},
-{id:25,a:"el abuelo",b:"der Großvater",u:"1"},
-{id:26,a:"la abuela",b:"die Großmutter",u:"1"},
-{id:27,a:"el tío",b:"der Onkel",u:"1"},
-{id:28,a:"la tía",b:"die Tante",u:"1"},
-{id:29,a:"el primo",b:"der Cousin",u:"1"},
-{id:30,a:"la prima",b:"die Cousine",u:"1"},
-{id:31,a:"el hijo",b:"der Sohn",u:"1"},
-{id:32,a:"la hija",b:"die Tochter",u:"1"},
-{id:33,a:"el nieto",b:"der Enkel",u:"1"},
-{id:34,a:"la nieta",b:"die Enkelin",u:"1"},
-{id:35,a:"el hombre",b:"der Mann",u:"1"},
-{id:36,a:"la mujer",b:"die Frau",u:"1"},
-{id:37,a:"el niño",b:"das Kind",u:"1"},
-{id:38,a:"el chico",b:"der Junge",u:"1"},
-{id:39,a:"la chica",b:"das Mädchen",u:"1"},
-{id:40,a:"el bebé",b:"das Baby",u:"1"},
-{id:41,a:"la familia",b:"die Familie",u:"1"},
-{id:42,a:"joven",b:"jung",u:"1"},
-{id:43,a:"viejo",b:"alt",u:"1"},
-{id:44,a:"alto",b:"groß",u:"1"},
-{id:45,a:"bajo",b:"klein",u:"1"},
-{id:46,a:"guapo",b:"hübsch",u:"1"},
-{id:47,a:"feo",b:"hässlich",u:"1"},
-{id:48,a:"simpático",b:"sympathisch",u:"1"},
-{id:49,a:"antipático",b:"unsympathisch",u:"1"},
-{id:50,a:"inteligente",b:"intelligent",u:"1"},
-{id:51,a:"tonto",b:"dumm",u:"1"},
-{id:52,a:"ser",b:"sein",u:"1"},
-{id:53,a:"tener",b:"haben",u:"1"},
-{id:54,a:"llamarse",b:"heißen",u:"1"},
-{id:55,a:"¿Cómo te llamas?",b:"Wie heißt du?",u:"1"},
-{id:56,a:"¿Cuántos años tienes?",b:"Wie alt bist du?",u:"1"},
-{id:57,a:"¿De dónde eres?",b:"Woher kommst du?",u:"1"},
-{id:58,a:"el libro",b:"das Buch",u:"2"},
-{id:59,a:"el cuaderno",b:"das Heft",u:"2"},
-{id:60,a:"el lápiz",b:"der Bleistift",u:"2"},
-{id:61,a:"el bolígrafo",b:"der Kugelschreiber",u:"2"},
-{id:62,a:"la pluma",b:"der Füller",u:"2"},
-{id:63,a:"la goma",b:"der Radiergummi",u:"2"},
-{id:64,a:"la regla",b:"das Lineal",u:"2"},
-{id:65,a:"las tijeras",b:"die Schere",u:"2"},
-{id:66,a:"la mochila",b:"der Rucksack",u:"2"},
-{id:67,a:"el estuche",b:"das Federmäppchen",u:"2"},
-{id:68,a:"la carpeta",b:"der Ordner",u:"2"},
-{id:69,a:"el papel",b:"das Papier",u:"2"},
-{id:70,a:"el diccionario",b:"das Wörterbuch",u:"2"},
-{id:71,a:"la pizarra",b:"die Tafel",u:"2"},
-{id:72,a:"la tiza",b:"die Kreide",u:"2"},
-{id:73,a:"el rotulador",b:"der Filzstift",u:"2"},
-{id:74,a:"el escritorio",b:"der Schreibtisch",u:"2"},
-{id:75,a:"la silla",b:"der Stuhl",u:"2"},
-{id:76,a:"la mesa",b:"der Tisch",u:"2"},
-{id:77,a:"la ventana",b:"das Fenster",u:"2"},
-{id:78,a:"la puerta",b:"die Tür",u:"2"},
-{id:79,a:"el reloj",b:"die Uhr",u:"2"},
-{id:80,a:"el ordenador",b:"der Computer",u:"2"},
-{id:81,a:"la clase",b:"die Klasse",u:"2"},
-{id:82,a:"el aula",b:"das Klassenzimmer",u:"2"},
-{id:83,a:"el colegio",b:"die Schule",u:"2"},
-{id:84,a:"la universidad",b:"die Universität",u:"2"},
-{id:85,a:"las matemáticas",b:"die Mathematik",u:"2"},
-{id:86,a:"la historia",b:"die Geschichte",u:"2"},
-{id:87,a:"la geografía",b:"die Erdkunde",u:"2"},
-{id:88,a:"las ciencias",b:"die Naturwissenschaften",u:"2"},
-{id:89,a:"la física",b:"die Physik",u:"2"},
-{id:90,a:"la química",b:"die Chemie",u:"2"},
-{id:91,a:"la biología",b:"die Biologie",u:"2"},
-{id:92,a:"la música",b:"die Musik",u:"2"},
-{id:93,a:"el arte",b:"die Kunst",u:"2"},
-{id:94,a:"la educación física",b:"der Sport",u:"2"},
-{id:95,a:"el recreo",b:"die Pause",u:"2"},
-{id:96,a:"el examen",b:"die Prüfung",u:"2"},
-{id:97,a:"la nota",b:"die Note",u:"2"},
-{id:98,a:"estudiar",b:"lernen",u:"2"},
-{id:99,a:"aprender",b:"lernen",u:"2"},
-{id:100,a:"enseñar",b:"lehren",u:"2"},
-{id:101,a:"leer",b:"lesen",u:"2"},
-{id:102,a:"escribir",b:"schreiben",u:"2"},
-{id:103,a:"hablar",b:"sprechen",u:"2"},
-{id:104,a:"escuchar",b:"hören",u:"2"},
-{id:105,a:"preguntar",b:"fragen",u:"2"},
-{id:106,a:"responder",b:"antworten",u:"2"},
-{id:107,a:"la casa",b:"das Haus",u:"3"},
-{id:108,a:"el piso",b:"die Wohnung",u:"3"},
-{id:109,a:"la habitación",b:"das Zimmer",u:"3"},
-{id:110,a:"el dormitorio",b:"das Schlafzimmer",u:"3"},
-{id:111,a:"el salón",b:"das Wohnzimmer",u:"3"},
-{id:112,a:"la cocina",b:"die Küche",u:"3"},
-{id:113,a:"el baño",b:"das Badezimmer",u:"3"},
-{id:114,a:"el comedor",b:"das Esszimmer",u:"3"},
-{id:115,a:"el pasillo",b:"der Flur",u:"3"},
-{id:116,a:"el garaje",b:"die Garage",u:"3"},
-{id:117,a:"el jardín",b:"der Garten",u:"3"},
-{id:118,a:"el balcón",b:"der Balkon",u:"3"},
-{id:119,a:"la terraza",b:"die Terrasse",u:"3"},
-{id:120,a:"el suelo",b:"der Boden",u:"3"},
-{id:121,a:"la pared",b:"die Wand",u:"3"},
-{id:122,a:"la escalera",b:"die Treppe",u:"3"},
-{id:123,a:"el ascensor",b:"der Aufzug",u:"3"},
-{id:124,a:"la cama",b:"das Bett",u:"3"},
-{id:125,a:"el armario",b:"der Schrank",u:"3"},
-{id:126,a:"la estantería",b:"das Regal",u:"3"},
-{id:127,a:"el sofá",b:"das Sofa",u:"3"},
-{id:128,a:"el sillón",b:"der Sessel",u:"3"},
-{id:129,a:"la lámpara",b:"die Lampe",u:"3"},
-{id:130,a:"la alfombra",b:"der Teppich",u:"3"},
-{id:131,a:"el espejo",b:"der Spiegel",u:"3"},
-{id:132,a:"la televisión",b:"der Fernseher",u:"3"},
-{id:133,a:"el frigorífico",b:"der Kühlschrank",u:"3"},
-{id:134,a:"el horno",b:"der Ofen",u:"3"},
-{id:135,a:"el microondas",b:"die Mikrowelle",u:"3"},
-{id:136,a:"la lavadora",b:"die Waschmaschine",u:"3"},
-{id:137,a:"la ducha",b:"die Dusche",u:"3"},
-{id:138,a:"la bañera",b:"die Badewanne",u:"3"},
-{id:139,a:"el lavabo",b:"das Waschbecken",u:"3"},
-{id:140,a:"el inodoro",b:"die Toilette",u:"3"},
-{id:141,a:"vivir",b:"wohnen",u:"3"},
-{id:142,a:"mudarse",b:"umziehen",u:"3"},
-{id:143,a:"limpiar",b:"putzen",u:"3"},
-{id:144,a:"ordenar",b:"aufräumen",u:"3"},
-{id:145,a:"cocinar",b:"kochen",u:"3"},
-{id:146,a:"el lunes",b:"der Montag",u:"4"},
-{id:147,a:"el martes",b:"der Dienstag",u:"4"},
-{id:148,a:"el miércoles",b:"der Mittwoch",u:"4"},
-{id:149,a:"el jueves",b:"der Donnerstag",u:"4"},
-{id:150,a:"el viernes",b:"der Freitag",u:"4"},
-{id:151,a:"el sábado",b:"der Samstag",u:"4"},
-{id:152,a:"el domingo",b:"der Sonntag",u:"4"},
-{id:153,a:"la semana",b:"die Woche",u:"4"},
-{id:154,a:"el fin de semana",b:"das Wochenende",u:"4"},
-{id:155,a:"hoy",b:"heute",u:"4"},
-{id:156,a:"ayer",b:"gestern",u:"4"},
-{id:157,a:"mañana",b:"morgen",u:"4"},
-{id:158,a:"enero",b:"Januar",u:"4"},
-{id:159,a:"febrero",b:"Februar",u:"4"},
-{id:160,a:"marzo",b:"März",u:"4"},
-{id:161,a:"abril",b:"April",u:"4"},
-{id:162,a:"mayo",b:"Mai",u:"4"},
-{id:163,a:"junio",b:"Juni",u:"4"},
-{id:164,a:"julio",b:"Juli",u:"4"},
-{id:165,a:"agosto",b:"August",u:"4"},
-{id:166,a:"septiembre",b:"September",u:"4"},
-{id:167,a:"octubre",b:"Oktober",u:"4"},
-{id:168,a:"noviembre",b:"November",u:"4"},
-{id:169,a:"diciembre",b:"Dezember",u:"4"},
-{id:170,a:"el mes",b:"der Monat",u:"4"},
-{id:171,a:"el año",b:"das Jahr",u:"4"},
-{id:172,a:"la fecha",b:"das Datum",u:"4"},
-{id:173,a:"el día",b:"der Tag",u:"4"},
-{id:174,a:"la primavera",b:"der Frühling",u:"4"},
-{id:175,a:"el verano",b:"der Sommer",u:"4"},
-{id:176,a:"el otoño",b:"der Herbst",u:"4"},
-{id:177,a:"el invierno",b:"der Winter",u:"4"},
-{id:178,a:"la hora",b:"die Uhrzeit",u:"4"},
-{id:179,a:"el minuto",b:"die Minute",u:"4"},
-{id:180,a:"la mañana",b:"der Morgen",u:"4"},
-{id:181,a:"la tarde",b:"der Nachmittag",u:"4"},
-{id:182,a:"la noche",b:"die Nacht",u:"4"},
-{id:183,a:"medianoche",b:"Mitternacht",u:"4"},
-{id:184,a:"mediodía",b:"Mittag",u:"4"},
-{id:185,a:"el desayuno",b:"das Frühstück",u:"5"},
-{id:186,a:"el almuerzo",b:"das Mittagessen",u:"5"},
-{id:187,a:"la cena",b:"das Abendessen",u:"5"},
-{id:188,a:"el agua",b:"das Wasser",u:"5"},
-{id:189,a:"el zumo",b:"der Saft",u:"5"},
-{id:190,a:"el café",b:"der Kaffee",u:"5"},
-{id:191,a:"el té",b:"der Tee",u:"5"},
-{id:192,a:"la leche",b:"die Milch",u:"5"},
-{id:193,a:"el refresco",b:"die Limonade",u:"5"},
-{id:194,a:"el vino",b:"der Wein",u:"5"},
-{id:195,a:"la cerveza",b:"das Bier",u:"5"},
-{id:196,a:"el pan",b:"das Brot",u:"5"},
-{id:197,a:"el bocadillo",b:"das Sandwich",u:"5"},
-{id:198,a:"la tostada",b:"der Toast",u:"5"},
-{id:199,a:"la mantequilla",b:"die Butter",u:"5"},
-{id:200,a:"la mermelada",b:"die Marmelade",u:"5"},
-{id:201,a:"el queso",b:"der Käse",u:"5"},
-{id:202,a:"el jamón",b:"der Schinken",u:"5"},
-{id:203,a:"el huevo",b:"das Ei",u:"5"},
-{id:204,a:"la carne",b:"das Fleisch",u:"5"},
-{id:205,a:"el pollo",b:"das Hähnchen",u:"5"},
-{id:206,a:"el pescado",b:"der Fisch",u:"5"},
-{id:207,a:"el arroz",b:"der Reis",u:"5"},
-{id:208,a:"la pasta",b:"die Nudeln",u:"5"},
-{id:209,a:"la patata",b:"die Kartoffel",u:"5"},
-{id:210,a:"la verdura",b:"das Gemüse",u:"5"},
-{id:211,a:"la ensalada",b:"der Salat",u:"5"},
-{id:212,a:"la lechuga",b:"die Salatblätter",u:"5"},
-{id:213,a:"el tomate",b:"die Tomate",u:"5"},
-{id:214,a:"la zanahoria",b:"die Karotte",u:"5"},
-{id:215,a:"la cebolla",b:"die Zwiebel",u:"5"},
-{id:216,a:"la fruta",b:"das Obst",u:"5"},
-{id:217,a:"la manzana",b:"der Apfel",u:"5"},
-{id:218,a:"la naranja",b:"die Orange",u:"5"},
-{id:219,a:"el plátano",b:"die Banane",u:"5"},
-{id:220,a:"la pera",b:"die Birne",u:"5"},
-{id:221,a:"la fresa",b:"die Erdbeere",u:"5"},
-{id:222,a:"la uva",b:"die Traube",u:"5"},
-{id:223,a:"el postre",b:"der Nachtisch",u:"5"},
-{id:224,a:"el helado",b:"das Eis",u:"5"},
-{id:225,a:"el pastel",b:"der Kuchen",u:"5"},
-{id:226,a:"la tarta",b:"die Torte",u:"5"},
-{id:227,a:"el chocolate",b:"die Schokolade",u:"5"},
-{id:228,a:"el azúcar",b:"der Zucker",u:"5"},
-{id:229,a:"la sal",b:"das Salz",u:"5"},
-{id:230,a:"tener hambre",b:"Hunger haben",u:"5"},
-{id:231,a:"tener sed",b:"Durst haben",u:"5"},
-{id:232,a:"comer",b:"essen",u:"5"},
-{id:233,a:"beber",b:"trinken",u:"5"},
-{id:234,a:"desayunar",b:"frühstücken",u:"5"},
-{id:235,a:"almorzar",b:"zu Mittag essen",u:"5"},
-{id:236,a:"cenar",b:"zu Abend essen",u:"5"},
-{id:237,a:"el cuerpo",b:"der Körper",u:"6"},
-{id:238,a:"la cabeza",b:"der Kopf",u:"6"},
-{id:239,a:"el pelo",b:"das Haar",u:"6"},
-{id:240,a:"la cara",b:"das Gesicht",u:"6"},
-{id:241,a:"los ojos",b:"die Augen",u:"6"},
-{id:242,a:"la nariz",b:"die Nase",u:"6"},
-{id:243,a:"la boca",b:"der Mund",u:"6"},
-{id:244,a:"la oreja",b:"das Ohr",u:"6"},
-{id:245,a:"el diente",b:"der Zahn",u:"6"},
-{id:246,a:"el cuello",b:"der Hals",u:"6"},
-{id:247,a:"el hombro",b:"die Schulter",u:"6"},
-{id:248,a:"el brazo",b:"der Arm",u:"6"},
-{id:249,a:"el codo",b:"der Ellbogen",u:"6"},
-{id:250,a:"la mano",b:"die Hand",u:"6"},
-{id:251,a:"el dedo",b:"der Finger",u:"6"},
-{id:252,a:"la pierna",b:"das Bein",u:"6"},
-{id:253,a:"la rodilla",b:"das Knie",u:"6"},
-{id:254,a:"el pie",b:"der Fuß",u:"6"},
-{id:255,a:"el estómago",b:"der Bauch",u:"6"},
-{id:256,a:"la espalda",b:"der Rücken",u:"6"},
-{id:257,a:"el corazón",b:"das Herz",u:"6"},
-{id:258,a:"enfermo",b:"krank",u:"6"},
-{id:259,a:"sano",b:"gesund",u:"6"},
-{id:260,a:"el dolor",b:"der Schmerz",u:"6"},
-{id:261,a:"la enfermedad",b:"die Krankheit",u:"6"},
-{id:262,a:"el resfriado",b:"die Erkältung",u:"6"},
-{id:263,a:"la gripe",b:"die Grippe",u:"6"},
-{id:264,a:"la fiebre",b:"das Fieber",u:"6"},
-{id:265,a:"la tos",b:"der Husten",u:"6"},
-{id:266,a:"el médico",b:"der Arzt",u:"6"},
-{id:267,a:"la médica",b:"die Ärztin",u:"6"},
-{id:268,a:"el hospital",b:"das Krankenhaus",u:"6"},
-{id:269,a:"la farmacia",b:"die Apotheke",u:"6"},
-{id:270,a:"la medicina",b:"das Medikament",u:"6"},
-{id:271,a:"doler",b:"wehtun",u:"6"},
-{id:272,a:"tener fiebre",b:"Fieber haben",u:"6"},
-{id:273,a:"tener tos",b:"Husten haben",u:"6"},
-{id:274,a:"la ropa",b:"die Kleidung",u:"7"},
-{id:275,a:"la camisa",b:"das Hemd",u:"7"},
-{id:276,a:"la camiseta",b:"das T-Shirt",u:"7"},
-{id:277,a:"el pantalón",b:"die Hose",u:"7"},
-{id:278,a:"los vaqueros",b:"die Jeans",u:"7"},
-{id:279,a:"la falda",b:"der Rock",u:"7"},
-{id:280,a:"el vestido",b:"das Kleid",u:"7"},
-{id:281,a:"la chaqueta",b:"die Jacke",u:"7"},
-{id:282,a:"el abrigo",b:"der Mantel",u:"7"},
-{id:283,a:"el jersey",b:"der Pullover",u:"7"},
-{id:284,a:"la sudadera",b:"das Sweatshirt",u:"7"},
-{id:285,a:"los calcetines",b:"die Socken",u:"7"},
-{id:286,a:"los zapatos",b:"die Schuhe",u:"7"},
-{id:287,a:"las botas",b:"die Stiefel",u:"7"},
-{id:288,a:"las zapatillas",b:"die Turnschuhe",u:"7"},
-{id:289,a:"el sombrero",b:"der Hut",u:"7"},
-{id:290,a:"la gorra",b:"die Mütze",u:"7"},
-{id:291,a:"los guantes",b:"die Handschuhe",u:"7"},
-{id:292,a:"la bufanda",b:"der Schal",u:"7"},
-{id:293,a:"el cinturón",b:"der Gürtel",u:"7"},
-{id:294,a:"el traje",b:"der Anzug",u:"7"},
-{id:295,a:"el pijama",b:"der Schlafanzug",u:"7"},
-{id:296,a:"el bañador",b:"die Badehose",u:"7"},
-{id:297,a:"blanco",b:"weiß",u:"7"},
-{id:298,a:"negro",b:"schwarz",u:"7"},
-{id:299,a:"rojo",b:"rot",u:"7"},
-{id:300,a:"azul",b:"blau",u:"7"},
-{id:301,a:"verde",b:"grün",u:"7"},
-{id:302,a:"amarillo",b:"gelb",u:"7"},
-{id:303,a:"naranja",b:"orange",u:"7"},
-{id:304,a:"rosa",b:"rosa",u:"7"},
-{id:305,a:"morado",b:"lila",u:"7"},
-{id:306,a:"marrón",b:"braun",u:"7"},
-{id:307,a:"gris",b:"grau",u:"7"},
-{id:308,a:"llevar",b:"tragen",u:"7"},
-{id:309,a:"ponerse",b:"anziehen",u:"7"},
-{id:310,a:"quitarse",b:"ausziehen",u:"7"},
-{id:311,a:"la ciudad",b:"die Stadt",u:"8"},
-{id:312,a:"el pueblo",b:"das Dorf",u:"8"},
-{id:313,a:"la calle",b:"die Straße",u:"8"},
-{id:314,a:"la plaza",b:"der Platz",u:"8"},
-{id:315,a:"el parque",b:"der Park",u:"8"},
-{id:316,a:"el edificio",b:"das Gebäude",u:"8"},
-{id:317,a:"la tienda",b:"das Geschäft",u:"8"},
-{id:318,a:"el supermercado",b:"der Supermarkt",u:"8"},
-{id:319,a:"el mercado",b:"der Markt",u:"8"},
-{id:320,a:"la panadería",b:"die Bäckerei",u:"8"},
-{id:321,a:"la carnicería",b:"die Metzgerei",u:"8"},
-{id:322,a:"el banco",b:"die Bank",u:"8"},
-{id:323,a:"la oficina",b:"das Büro",u:"8"},
-{id:324,a:"correos",b:"die Post",u:"8"},
-{id:325,a:"la estación",b:"der Bahnhof",u:"8"},
-{id:326,a:"el aeropuerto",b:"der Flughafen",u:"8"},
-{id:327,a:"el hotel",b:"das Hotel",u:"8"},
-{id:328,a:"el restaurante",b:"das Restaurant",u:"8"},
-{id:329,a:"el bar",b:"die Bar",u:"8"},
-{id:330,a:"el cine",b:"das Kino",u:"8"},
-{id:331,a:"el teatro",b:"das Theater",u:"8"},
-{id:332,a:"el museo",b:"das Museum",u:"8"},
-{id:333,a:"la biblioteca",b:"die Bibliothek",u:"8"},
-{id:334,a:"la iglesia",b:"die Kirche",u:"8"},
-{id:335,a:"el castillo",b:"das Schloss",u:"8"},
-{id:336,a:"el puente",b:"die Brücke",u:"8"},
-{id:337,a:"el río",b:"der Fluss",u:"8"},
-{id:338,a:"el lago",b:"der See",u:"8"},
-{id:339,a:"el mar",b:"das Meer",u:"8"},
-{id:340,a:"la playa",b:"der Strand",u:"8"},
-{id:341,a:"la montaña",b:"der Berg",u:"8"},
-{id:342,a:"el bosque",b:"der Wald",u:"8"},
-{id:343,a:"ir",b:"gehen",u:"8"},
-{id:344,a:"venir",b:"kommen",u:"8"},
-{id:345,a:"llegar",b:"ankommen",u:"8"},
-{id:346,a:"salir",b:"ausgehen",u:"8"},
-{id:347,a:"entrar",b:"hineingehen",u:"8"},
-{id:348,a:"el tiempo libre",b:"die Freizeit",u:"9"},
-{id:349,a:"el fútbol",b:"der Fußball",u:"9"},
-{id:350,a:"el baloncesto",b:"der Basketball",u:"9"},
-{id:351,a:"el tenis",b:"das Tennis",u:"9"},
-{id:352,a:"la natación",b:"das Schwimmen",u:"9"},
-{id:353,a:"el ciclismo",b:"das Radfahren",u:"9"},
-{id:354,a:"correr",b:"laufen",u:"9"},
-{id:355,a:"nadar",b:"schwimmen",u:"9"},
-{id:356,a:"montar en bicicleta",b:"Fahrrad fahren",u:"9"},
-{id:357,a:"jugar",b:"spielen",u:"9"},
-{id:358,a:"el partido",b:"das Spiel",u:"9"},
-{id:359,a:"el equipo",b:"die Mannschaft",u:"9"},
-{id:360,a:"el jugador",b:"der Spieler",u:"9"},
-{id:361,a:"el hobby",b:"das Hobby",u:"9"},
-{id:362,a:"cantar",b:"singen",u:"9"},
-{id:363,a:"bailar",b:"tanzen",u:"9"},
-{id:364,a:"tocar",b:"spielen",u:"9"},
-{id:365,a:"el instrumento",b:"das Instrument",u:"9"},
-{id:366,a:"la guitarra",b:"die Gitarre",u:"9"},
-{id:367,a:"el piano",b:"das Klavier",u:"9"},
-{id:368,a:"ver la televisión",b:"fernsehen",u:"9"},
-{id:369,a:"navegar por internet",b:"im Internet surfen",u:"9"},
-{id:370,a:"jugar a videojuegos",b:"Videospiele spielen",u:"9"},
-{id:371,a:"salir con amigos",b:"mit Freunden ausgehen",u:"9"},
-{id:372,a:"ir al cine",b:"ins Kino gehen",u:"9"},
-{id:373,a:"ir de compras",b:"einkaufen gehen",u:"9"},
-{id:374,a:"viajar",b:"reisen",u:"9"},
-{id:375,a:"el viaje",b:"die Reise",u:"9"},
-{id:376,a:"las vacaciones",b:"die Ferien",u:"9"},
-{id:377,a:"descansar",b:"sich ausruhen",u:"9"},
-{id:378,a:"divertirse",b:"sich amüsieren",u:"9"},
-]};
+const BUILTIN_SETS = (function buildBuiltinSets(){
+  const reg = window.VOCAB_REGISTRY || [];
+  const map = {};
+  for (const s of reg){
+    if (s.extendsSetId && map[s.extendsSetId]){
+      map[s.extendsSetId].vocab = [...map[s.extendsSetId].vocab, ...s.vocab];
+    } else {
+      map[s.id] = {...s, vocab: [...s.vocab]};
+    }
+  }
+  return Object.values(map);
+})();
+function getBuiltinSet(id){ return BUILTIN_SETS.find(s=>s.id===id); }
+if (!BUILTIN_SETS.length){
+  document.body.innerHTML = '<div style="padding:40px;font:16px system-ui;color:#b00;text-align:center">Vokabeldateien konnten nicht geladen werden.<br>Bitte den vocab/-Ordner prüfen (z.B. vocab/es-de.js).</div>';
+  throw new Error('No vocab sets registered');
+}
 
 // ═══════════════════════════════════════════════════════════
 // PROFILE & SET STATE
@@ -849,12 +537,12 @@ function loadSetExtensions(){
   });
 }
 function getActiveSet(){
-  const base=activeSetId==='es-de'?BUILTIN_SET:(customSets.find(s=>s.id===activeSetId)||BUILTIN_SET);
+  const base=getBuiltinSet(activeSetId)||customSets.find(s=>s.id===activeSetId)||BUILTIN_SETS[0];
   const ext=setExtensions[activeSetId]||[];
   return ext.length?{...base,vocab:[...base.vocab,...ext]}:base;
 }
-function getAllSets(){return[BUILTIN_SET,...customSets];}
-function getAllUnits(){return[...new Set(getActiveSet().vocab.map(v=>v.u))].sort((a,b)=>+a-+b);}
+function getAllSets(){return[...BUILTIN_SETS,...customSets];}
+function getAllUnits(){const k=u=>{const n=+u;return isNaN(n)?1e9:n;};return[...new Set(getActiveSet().vocab.map(v=>v.u))].sort((a,b)=>k(a)-k(b)||String(a).localeCompare(String(b)));}
 
 // ═══════════════════════════════════════════════════════════
 // QUIZ STATE
@@ -1046,6 +734,7 @@ function renderProfileMenu(){
     <button onclick="submitMenuProfile()">+</button>
   </div>`;
   html+=`<div class="dropdown-divider"></div>
+  <div class="dropdown-item" onclick="showLeaderboard()">🏆 Leaderboard</div>
   <div class="dropdown-item" onclick="showSyncSettings()">☁️ GitHub-Sync</div>
   <div class="dropdown-divider"></div>
   <div class="dropdown-item save" onclick="saveProfileToFile()">💾 Spielstand speichern</div>
@@ -1341,6 +1030,17 @@ function esc(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// Display-only extras: Spezialformen (forms) and Fremdwörter (loan).
+// These are not matched by the quiz — they just help learning.
+function renderExtraInfo(entry){
+  if(!entry)return'';
+  const parts=[];
+  if(entry.forms)parts.push(`<div class="x-forms"><span class="x-tag">Formen</span>${esc(entry.forms)}</div>`);
+  if(entry.rel)parts.push(`<div class="x-rel"><span class="x-tag">Verwandt</span>${esc(entry.rel)}</div>`);
+  if(entry.loan)parts.push(`<div class="x-loan"><span class="x-tag">Fremdwörter</span>${esc(entry.loan)}</div>`);
+  return parts.length?`<div class="x-info">${parts.join('')}</div>`:'';
+}
+
 // ═══════════════════════════════════════════════════════════
 // QUIZ ACTIONS
 // ═══════════════════════════════════════════════════════════
@@ -1559,7 +1259,7 @@ function render(){
   if(phase==='start')card.innerHTML=renderStart();
   else if(phase==='question'){card.innerHTML=renderQ();const i=document.getElementById('ai');if(i)i.focus();}
   else if(phase==='proposals')card.innerHTML=renderProps();
-  else if(phase==='ok')card.innerHTML=`<div class="center" style="padding:36px 0"><div style="font-size:3rem">✅</div><div class="fb ok" style="margin-top:14px">${esc(lastMsg)}</div></div>`;
+  else if(phase==='ok')card.innerHTML=`<div class="center" style="padding:36px 0"><div style="font-size:3rem">✅</div><div class="fb ok" style="margin-top:14px">${esc(lastMsg)}</div>${renderExtraInfo(cur)}</div>`;
   else if(phase==='complete')card.innerHTML=renderComplete();
 }
 
@@ -2018,6 +1718,106 @@ function clearSyncToken(){
 function setSyncMessage(m){
   const el=document.getElementById('syncMessage');
   if(el)el.textContent=m;
+}
+
+// ═══════════════════════════════════════════════════════════
+// LEADERBOARD  (aggregated across all profiles from localStorage)
+// ═══════════════════════════════════════════════════════════
+function computeLeaderboardData(){
+  const profs=[];
+  try{JSON.parse(localStorage.getItem('sq_profiles')||'[]').forEach(p=>profs.push(p));}catch(x){}
+  // pre-init all known profiles so they appear even with 0 data
+  const byProf={};
+  profs.forEach(p=>{byProf[p]={maxStreak:0,done:new Set()};});
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(!k)continue;
+    // match {profile}:{setId}:{dir}:{key}
+    const prof=profs.find(p=>k.startsWith(p+':'));
+    if(!prof)continue;
+    const rest=k.slice(prof.length+1);
+    const parts=rest.split(':');
+    if(parts.length!==3)continue;
+    const[setId,dir,key]=parts;
+    if(dir!=='a-b'&&dir!=='b-a')continue;
+    if(key==='d'){
+      try{
+        JSON.parse(localStorage.getItem(k)||'[]').forEach(id=>byProf[prof].done.add(`${setId}:${id}`));
+      }catch(x){}
+    }else if(key==='h'){
+      try{
+        JSON.parse(localStorage.getItem(k)||'[]').forEach(h=>{
+          const m=+((h&&h.max)||0);
+          if(m>byProf[prof].maxStreak)byProf[prof].maxStreak=m;
+        });
+      }catch(x){}
+    }
+  }
+  // include current session streak for the active profile if higher
+  if(activeProfile&&byProf[activeProfile]&&sesMaxStreak>byProf[activeProfile].maxStreak){
+    byProf[activeProfile].maxStreak=sesMaxStreak;
+  }
+  return Object.entries(byProf).map(([name,d])=>({name,maxStreak:d.maxStreak,doneCount:d.done.size}));
+}
+
+function renderLeaderboardTable(items,valueKey,valueLabel,elId){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  const sorted=items.slice().sort((a,b)=>b[valueKey]-a[valueKey]);
+  if(!sorted.length||sorted.every(i=>i[valueKey]===0)){
+    el.innerHTML=`<div class="lb-empty">Noch keine Daten — jetzt ${valueLabel} sammeln!</div>`;
+    return;
+  }
+  el.innerHTML=sorted.map((it,i)=>{
+    const rank=i+1;
+    const rankCls=rank<=3?` r${rank}`:'';
+    const meCls=it.name===activeProfile?' me':'';
+    const medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank+'.';
+    return`<div class="lb-row${rankCls}${meCls}">
+      <div class="lb-rank">${medal}</div>
+      <div class="lb-name">${esc(it.name)}</div>
+      <div class="lb-val">${it[valueKey]}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderLeaderboard(){
+  const data=computeLeaderboardData();
+  renderLeaderboardTable(data,'maxStreak','Streaks','lbStreaks');
+  renderLeaderboardTable(data,'doneCount','Wörter','lbWords');
+}
+
+function showLeaderboard(){
+  closeMenu();
+  const o=document.getElementById('leaderboardOverlay');
+  if(!o)return;
+  document.getElementById('leaderboardMessage').textContent='';
+  renderLeaderboard();
+  o.style.display='flex';
+}
+
+function hideLeaderboard(){
+  const o=document.getElementById('leaderboardOverlay');
+  if(o)o.style.display='none';
+}
+
+async function refreshLeaderboard(){
+  const msg=document.getElementById('leaderboardMessage');
+  if(!ghToken){
+    if(msg)msg.textContent='⚠️ Kein Sync-Token — nur lokale Profile werden angezeigt.';
+    renderLeaderboard();
+    return;
+  }
+  if(msg)msg.textContent='🔄 Lade aktuelle Stände von GitHub…';
+  try{
+    await pullFromGitHub();
+    loadProfiles();
+    renderLeaderboard();
+    const last=localStorage.getItem('sq_gh_last_sync');
+    if(msg)msg.textContent=last?`✅ Aktualisiert · ${new Date(last).toLocaleString('de-DE')}`:'✅ Aktualisiert';
+  }catch(e){
+    if(msg)msg.textContent='⚠️ Aktualisierung fehlgeschlagen: '+(e.message||'unbekannt');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
