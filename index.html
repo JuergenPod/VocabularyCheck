@@ -13,6 +13,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .p-bar strong{color:#7eb3ff}
 .p-bar-btn{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 10px;border-radius:6px;font-size:.78rem;cursor:pointer;transition:all .15s}
 .p-bar-btn:hover{background:rgba(255,255,255,.15)}
+.today-chip{display:inline-block;margin-left:10px;font-size:.78rem;color:#fff;opacity:.85;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:6px;vertical-align:middle}
+body.dark .today-chip{background:rgba(126,179,255,.18);color:#cfe1ff}
 .dropdown-wrap{position:relative}
 .dropdown-menu{position:absolute;right:0;top:calc(100% + 6px);background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.2);min-width:160px;overflow:hidden;z-index:200}
 .dropdown-item{padding:10px 14px;cursor:pointer;font-size:.85rem;color:#333;transition:background .1s}
@@ -366,7 +368,7 @@ body.dark .load-link{color:#7eb3ff}
 
 <!-- Profile bar -->
 <div class="p-bar" id="pBar">
-  <span>👤 <strong id="pbName">–</strong><span class="sync-status s-none" id="syncStatus" onclick="showSyncSettings()" title="Kein Sync-Token">☁️🔒</span></span>
+  <span>👤 <strong id="pbName">–</strong><span class="today-chip" id="todayChip" style="display:none">⏱ Heute —</span><span class="sync-status s-none" id="syncStatus" onclick="showSyncSettings()" title="Kein Sync-Token">☁️🔒</span></span>
   <div style="display:flex;align-items:center;gap:8px">
     <button class="p-bar-btn" id="dmToggle" onclick="toggleDarkMode()" title="Dark Mode umschalten" style="font-size:1rem;padding:3px 8px">🌙</button>
     <div class="dropdown-wrap">
@@ -446,6 +448,10 @@ body.dark .load-link{color:#7eb3ff}
       <div>
         <h3 style="font-size:1rem;margin:0 0 8px;color:var(--blue)">📚 Top-Wörter</h3>
         <div id="lbWords" class="lb-table"></div>
+      </div>
+      <div>
+        <h3 style="font-size:1rem;margin:0 0 8px;color:var(--blue)">⏱ Top-Lernzeit</h3>
+        <div id="lbTime" class="lb-table"></div>
       </div>
     </div>
     <div style="display:flex;justify-content:flex-end">
@@ -639,6 +645,11 @@ let activeUnits=new Set();
 let streakHistory=[];
 let unitCompletions={};  // {unitId: "DD.MM.YY"}
 let unitPanelOpen=false;
+// Session timer (idle-aware via visibilitychange)
+let sesStart=0;          // 0 = no active session
+let sesElapsedMs=0;      // accumulated active time from earlier visible phases
+let sesVisibleSince=0;   // timestamp when current visible phase began; 0 = paused
+let lastSessionSec=0;    // last saved session duration (for Complete-Screen)
 
 // ═══════════════════════════════════════════════════════════
 // STORAGE  (all keys namespaced by profile + set [+ direction])
@@ -659,6 +670,7 @@ function save(){
   localStorage.setItem(pfxP('lang'),activeSetId);
   markProfileMtime();
   schedulePush();
+  updateTodayChip();
 }
 
 function _migrateOldKeys(){
@@ -736,6 +748,55 @@ function saveStreakEntry(){
   schedulePush();
 }
 
+// ─── Session timer helpers (idle-aware) ────────────────────
+function sesTimerStart(){
+  sesStart=Date.now();
+  sesElapsedMs=0;
+  sesVisibleSince=document.hidden?0:Date.now();
+}
+function sesTimerSnapshot(){
+  if(!sesStart)return 0;
+  let ms=sesElapsedMs;
+  if(sesVisibleSince)ms+=Date.now()-sesVisibleSince;
+  return ms;
+}
+function fmtDur(sec){
+  sec=Math.max(0,Math.round(+sec||0));
+  if(sec<60)return sec+' s';
+  const m=Math.floor(sec/60);
+  if(m<60)return m+' min';
+  const h=Math.floor(m/60),mr=m%60;
+  return mr?`${h}h ${mr}m`:`${h}h`;
+}
+function saveSessionTime(){
+  if(!sesStart||!activeProfile)return;
+  const sec=Math.round(sesTimerSnapshot()/1000);
+  sesStart=0;sesVisibleSince=0;sesElapsedMs=0;
+  if(sec<5)return;           // ignore accidental openings
+  lastSessionSec=sec;
+  const d=new Date();
+  const date=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getFullYear()).slice(2);
+  const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  let hist=[];try{hist=JSON.parse(localStorage.getItem(pfxP('t'))||'[]');}catch(x){}
+  hist.push({sec,date,iso,mode,set:activeSetId,setName:getActiveSet().name});
+  if(hist.length>50)hist=hist.slice(-50);
+  localStorage.setItem(pfxP('t'),JSON.stringify(hist));
+  markProfileMtime();
+  schedulePush();
+  updateTodayChip();
+}
+function updateTodayChip(){
+  const el=document.getElementById('todayChip');
+  if(!el)return;
+  if(!activeProfile){el.style.display='none';return;}
+  el.style.display='';
+  const today=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+  let sec=0;
+  try{JSON.parse(localStorage.getItem(pfxP('t'))||'[]').forEach(e=>{if(e.iso===today)sec+=(+e.sec||0);});}catch(x){}
+  sec+=Math.round(sesTimerSnapshot()/1000);
+  el.textContent=sec>0?`⏱ Heute ${fmtDur(sec)}`:'⏱ Heute 0 min';
+}
+
 // ═══════════════════════════════════════════════════════════
 // PROFILE MANAGEMENT
 // ═══════════════════════════════════════════════════════════
@@ -760,7 +821,7 @@ function saveProfiles(){
 
 function switchProfile(name){
   if(name===activeProfile)return;
-  saveStreakEntry();
+  saveStreakEntry();saveSessionTime();
   activeProfile=name;
   localStorage.setItem('sq_active',name);
   activeSetId=localStorage.getItem(pfxP('lang'))||'es-de';
@@ -768,6 +829,7 @@ function switchProfile(name){
   sesCorrect=0;streak=0;sesMaxStreak=0;phase='start';pool=[];cur=null;
   load();buildPool();
   renderAll();
+  updateTodayChip();
   closeMenu();
 }
 
@@ -843,7 +905,7 @@ function submitMenuProfile(){
 // ─── Save / Load profile state ─────────────────────────────
 function saveProfileToFile(){
   if(!activeProfile){alert('Kein aktives Profil.');return;}
-  saveStreakEntry();save();
+  saveStreakEntry();saveSessionTime();save();
   const state={};
   const prefix=activeProfile+':';
   for(let i=0;i<localStorage.length;i++){
@@ -893,7 +955,7 @@ function handleProfileLoad(input){
 
 function resetAllProgress(){
   if(!confirm(`Gesamten Fortschritt von „${activeProfile}" wirklich löschen? Das kann nicht rückgängig gemacht werden.`))return;
-  saveStreakEntry();
+  saveStreakEntry();saveSessionTime();
   // remove all keys for this profile
   const prefix=activeProfile+':';
   const toRemove=[];
@@ -1135,7 +1197,7 @@ function renderExtraInfo(entry){
 // ═══════════════════════════════════════════════════════════
 // QUIZ ACTIONS
 // ═══════════════════════════════════════════════════════════
-function startQuiz(){sesMaxStreak=0;sesCorrect=0;streak=0;buildPool();pick();render();}
+function startQuiz(){sesMaxStreak=0;sesCorrect=0;streak=0;sesTimerStart();buildPool();pick();render();}
 
 function doSubmit(){
   const inp=document.getElementById('ai');
@@ -1150,7 +1212,7 @@ function pickProposal(idx){
     streak=0;
     lastMsg=`✓ Richtig gewählt! „${c}" — kein Fortschritt (erste Antwort war falsch)`;
     phase='ok';render();
-    setTimeout(()=>{if(pool.length){pick();}else{const ms=sesMaxStreak;saveStreakEntry();sesMaxStreak=ms;phase='complete';updateHistoryDisplay();}render();},1800);
+    setTimeout(()=>{if(pool.length){pick();}else{const ms=sesMaxStreak;saveStreakEntry();saveSessionTime();sesMaxStreak=ms;phase='complete';updateHistoryDisplay();}render();},1800);
   }else{
     document.querySelectorAll('.p-btn').forEach((b,i)=>{
       b.disabled=true;
@@ -1174,12 +1236,13 @@ function markCorrect(){
     ?`✓ Richtig! „${c}" — Erledigt! 🎉`
     :`✓ Richtig! „${c}" — noch ${2-counts[cur.id]}× für Erledigt`;
   phase='ok';render();
-  setTimeout(()=>{if(pool.length){pick();}else{const ms=sesMaxStreak;saveStreakEntry();sesMaxStreak=ms;phase='complete';updateHistoryDisplay();}render();},1600);
+  setTimeout(()=>{if(pool.length){pick();}else{const ms=sesMaxStreak;saveStreakEntry();saveSessionTime();sesMaxStreak=ms;phase='complete';updateHistoryDisplay();}render();},1600);
 }
 
 function setMode(m){
   if(phase!=='start'&&phase!=='complete')return;
   if(m===mode)return;
+  saveStreakEntry();saveSessionTime();
   save();           // persist current direction before switching
   mode=m;
   _loadDirectional(); // load the other direction's progress
@@ -1191,7 +1254,7 @@ function setMode(m){
 
 function resetProgress(){
   if(!confirm('Fortschritt für dieses Vokabular zurücksetzen? (beide Richtungen)'))return;
-  saveStreakEntry();
+  saveStreakEntry();saveSessionTime();
   ['a-b','b-a'].forEach(dir=>
     ['d','c','uc'].forEach(k=>localStorage.removeItem(`${activeProfile}:${activeSetId}:${dir}:${k}`))
   );
@@ -1354,7 +1417,7 @@ function render(){
   else if(phase==='complete')card.innerHTML=renderComplete();
 }
 
-function renderAll(){render();updateHistoryDisplay();renderUnitOverview();}
+function renderAll(){render();updateHistoryDisplay();renderUnitOverview();updateTodayChip();}
 
 function renderStart(){
   const set=getActiveSet();
@@ -1407,6 +1470,7 @@ function renderProps(){
 }
 
 function renderComplete(){
+  const timeRow=lastSessionSec>0?`<div class="c-stat"><div class="c-stat-v">${fmtDur(lastSessionSec)}</div><div class="c-stat-l">Lernzeit</div></div>`:'';
   return`<div class="center" style="padding:18px 0">
 <div style="font-size:3rem;margin-bottom:12px">🏆</div>
 <h2 style="font-size:1.6rem;color:#1a1a2e;margin-bottom:8px">Alle Wörter erledigt!</h2>
@@ -1414,6 +1478,7 @@ function renderComplete(){
 <div class="c-stats">
 <div class="c-stat"><div class="c-stat-v">${sesCorrect}</div><div class="c-stat-l">Richtige Antworten</div></div>
 <div class="c-stat"><div class="c-stat-v">${sesMaxStreak}</div><div class="c-stat-l">Bester Streak</div></div>
+${timeRow}
 </div>
 <button class="btn btn-primary" style="margin-right:8px" onclick="exportDone()">⬇ Export</button>
 <button class="btn btn-outline" onclick="resetProgress()">↺ Neu starten</button>
@@ -1819,14 +1884,27 @@ function computeLeaderboardData(){
   try{JSON.parse(localStorage.getItem('sq_profiles')||'[]').forEach(p=>profs.push(p));}catch(x){}
   // pre-init all known profiles so they appear even with 0 data
   const byProf={};
-  profs.forEach(p=>{byProf[p]={maxStreak:0,done:new Set()};});
+  profs.forEach(p=>{byProf[p]={maxStreak:0,done:new Set(),totalSec:0};});
   for(let i=0;i<localStorage.length;i++){
     const k=localStorage.key(i);
     if(!k)continue;
-    // match {profile}:{setId}:{dir}:{key}
     const prof=profs.find(p=>k.startsWith(p+':'));
     if(!prof)continue;
     const rest=k.slice(prof.length+1);
+    // profile-level key {profile}:h — streak history (stored via pfxP)
+    if(rest==='h'){
+      try{JSON.parse(localStorage.getItem(k)||'[]').forEach(h=>{
+        const m=+((h&&h.max)||0);
+        if(m>byProf[prof].maxStreak)byProf[prof].maxStreak=m;
+      });}catch(x){}
+      continue;
+    }
+    // profile-level key {profile}:t — time history
+    if(rest==='t'){
+      try{JSON.parse(localStorage.getItem(k)||'[]').forEach(e=>byProf[prof].totalSec+=(+e.sec||0));}catch(x){}
+      continue;
+    }
+    // match {profile}:{setId}:{dir}:{key}
     const parts=rest.split(':');
     if(parts.length!==3)continue;
     const[setId,dir,key]=parts;
@@ -1835,20 +1913,14 @@ function computeLeaderboardData(){
       try{
         JSON.parse(localStorage.getItem(k)||'[]').forEach(id=>byProf[prof].done.add(`${setId}:${id}`));
       }catch(x){}
-    }else if(key==='h'){
-      try{
-        JSON.parse(localStorage.getItem(k)||'[]').forEach(h=>{
-          const m=+((h&&h.max)||0);
-          if(m>byProf[prof].maxStreak)byProf[prof].maxStreak=m;
-        });
-      }catch(x){}
     }
   }
-  // include current session streak for the active profile if higher
-  if(activeProfile&&byProf[activeProfile]&&sesMaxStreak>byProf[activeProfile].maxStreak){
-    byProf[activeProfile].maxStreak=sesMaxStreak;
+  // include current live session for the active profile
+  if(activeProfile&&byProf[activeProfile]){
+    if(sesMaxStreak>byProf[activeProfile].maxStreak)byProf[activeProfile].maxStreak=sesMaxStreak;
+    byProf[activeProfile].totalSec+=Math.round(sesTimerSnapshot()/1000);
   }
-  return Object.entries(byProf).map(([name,d])=>({name,maxStreak:d.maxStreak,doneCount:d.done.size}));
+  return Object.entries(byProf).map(([name,d])=>({name,maxStreak:d.maxStreak,doneCount:d.done.size,totalSec:d.totalSec}));
 }
 
 function renderLeaderboardTable(items,valueKey,valueLabel,elId){
@@ -1864,10 +1936,11 @@ function renderLeaderboardTable(items,valueKey,valueLabel,elId){
     const rankCls=rank<=3?` r${rank}`:'';
     const meCls=it.name===activeProfile?' me':'';
     const medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank+'.';
+    const val=valueKey==='totalSec'?fmtDur(it.totalSec):it[valueKey];
     return`<div class="lb-row${rankCls}${meCls}">
       <div class="lb-rank">${medal}</div>
       <div class="lb-name">${esc(it.name)}</div>
-      <div class="lb-val">${it[valueKey]}</div>
+      <div class="lb-val">${val}</div>
     </div>`;
   }).join('');
 }
@@ -1876,15 +1949,26 @@ function renderLeaderboard(){
   const data=computeLeaderboardData();
   renderLeaderboardTable(data,'maxStreak','Streaks','lbStreaks');
   renderLeaderboardTable(data,'doneCount','Wörter','lbWords');
+  renderLeaderboardTable(data,'totalSec','Lernzeit','lbTime');
 }
 
-function showLeaderboard(){
+async function showLeaderboard(){
   closeMenu();
   const o=document.getElementById('leaderboardOverlay');
   if(!o)return;
-  document.getElementById('leaderboardMessage').textContent='';
-  renderLeaderboard();
+  const msg=document.getElementById('leaderboardMessage');
+  if(msg)msg.textContent='';
+  renderLeaderboard();                                   // render with local data first
   o.style.display='flex';
+  if(ghToken){
+    if(msg)msg.textContent='🔄 Aktualisiere…';
+    try{
+      await pullFromGitHub();
+      loadProfiles();
+      renderLeaderboard();
+      if(msg)msg.textContent='';
+    }catch(e){if(msg)msg.textContent='';}
+  }
 }
 
 function hideLeaderboard(){
@@ -2299,11 +2383,28 @@ checkForUpdate();   // fire-and-forget update check
   }else{
     load();buildPool();renderAll();
   }
+  updateTodayChip();
 })();
 
-window.addEventListener('beforeunload',()=>{
-  saveStreakEntry();
-  // Flush pending push synchronously via sendBeacon-like — fetch with keepalive
+// Pause session timer when tab hidden, resume on visible
+document.addEventListener('visibilitychange',()=>{
+  if(!sesStart)return;
+  if(document.hidden){
+    if(sesVisibleSince){sesElapsedMs+=Date.now()-sesVisibleSince;sesVisibleSince=0;}
+  }else{
+    if(!sesVisibleSince)sesVisibleSince=Date.now();
+  }
+});
+
+// Keep "Heute"-Chip live while the app is open
+if(window.todayChipTimer)clearInterval(window.todayChipTimer);
+window.todayChipTimer=setInterval(updateTodayChip,30000);
+
+// Unified exit flush — runs on both beforeunload and pagehide (the latter is more reliable on mobile)
+let _exitFlushed=false;
+function flushOnExit(){
+  if(_exitFlushed)return;_exitFlushed=true;
+  saveStreakEntry();saveSessionTime();
   if(ghToken&&pushTimer){
     clearTimeout(pushTimer);
     try{
@@ -2317,7 +2418,9 @@ window.addEventListener('beforeunload',()=>{
       });
     }catch(x){}
   }
-});
+}
+window.addEventListener('beforeunload',flushOnExit);
+window.addEventListener('pagehide',flushOnExit);
 </script>
 </body>
 </html>

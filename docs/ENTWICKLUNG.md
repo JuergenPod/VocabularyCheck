@@ -134,8 +134,9 @@ Werden automatisch vom GitHub-Sync mit erfasst (scannt alle `<profil>:*`).
 | `~820` | `renderProfileMenu()` — listet Vokabelsets + Lern-Module |
 | `~840` | `save()` — localStorage-Write, triggert `schedulePush()` |
 | `~1033` | `renderExtraInfo()` — zeigt forms/rel/loan nach richtiger Antwort |
+| `~750` | `saveStreakEntry()`, `saveSessionTime()`, `sesTimer*`, `fmtDur`, `updateTodayChip` |
 | `~1580` | `checkForUpdate()` — Auto-Update-Banner via GitHub-API |
-| `~1700` | Leaderboard (`computeLeaderboardData`, `renderLeaderboard`) |
+| `~1700` | Leaderboard (`computeLeaderboardData`, `renderLeaderboard`) — Streaks (`<profil>:h`), Wörter (`<profil>:<set>:<dir>:d`), Lernzeit (`<profil>:t`) |
 | `~1800` | GitHub-Sync (`pullFromGitHub`, `pushToGitHub`, `schedulePush`) |
 | `~1907` | Lern-Modul JS (`showLearn`, Karteikarten/Quiz/Textanalyse-Renderer) |
 | `~2150` | Init-Block |
@@ -145,7 +146,8 @@ Werden automatisch vom GitHub-Sync mit erfasst (scannt alle `<profil>:*`).
 - `sq_profiles` — JSON-Array der Profilnamen
 - `sq_active_profile` — Aktives Profil
 - `<profil>:<setId>:<dir>:d` — Done-IDs (Array), `dir` ∈ `a-b` / `b-a`
-- `<profil>:<setId>:<dir>:h` — Streak-History (Array von `{date, max}`)
+- `<profil>:h` — Streak-History (Array von `{date, max, mode, set, setName}`, max. 20)
+- `<profil>:t` — Session-Zeiten (Array von `{sec, date, iso, mode, set, setName}`, max. 50) — kumuliert im Leaderboard als „Lernzeit"
 - `<profil>:learn:<modId>:{fc|q|t}:<itemId>` — Lern-Fortschritt pro Modul/Modus/Item
 - `<profil>:mtime` — ISO-Timestamp letzter Änderung (für Sync-Merge)
 - `sq_gh_token` — GitHub PAT (pro Gerät)
