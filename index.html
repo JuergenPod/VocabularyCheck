@@ -348,6 +348,37 @@ body.dark .load-link{color:#7eb3ff}
 .ms-sub{font-size:.82rem;color:#7eb3ff;margin-top:6px;opacity:.8}
 @keyframes ms-bounce{from{transform:scale(1) rotate(-4deg)}to{transform:scale(1.18) rotate(4deg)}}
 @keyframes ms-shine{0%{background-position:0%}100%{background-position:200%}}
+/* ── Offene Fragen ── */
+.oq-question{font-size:1.05rem;font-weight:600;color:#1a1a2e;line-height:1.45;margin-bottom:14px}
+.oq-textarea{width:100%;min-height:110px;padding:10px 13px;border:2px solid var(--border);border-radius:10px;font-size:.95rem;font-family:inherit;resize:vertical;outline:none;transition:border-color .2s;line-height:1.4}
+.oq-textarea:focus{border-color:var(--blue)}
+.oq-textarea:disabled{background:#f3f4f6;color:#6b7280}
+.oq-submit{display:block;width:100%;margin-top:8px;padding:11px;border-radius:10px;background:var(--blue);color:#fff;border:none;font-weight:700;font-size:.95rem;cursor:pointer;transition:filter .15s}
+.oq-submit:hover{filter:brightness(1.1)}
+.oq-reveal{margin-top:14px;padding:13px 15px;background:#fffbe8;border-left:4px solid #f59e0b;border-radius:0 8px 8px 0}
+.oq-reveal-label{font-size:.72rem;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.oq-reveal-text{font-size:.9rem;line-height:1.55;color:#374151}
+.oq-keypoints{margin-top:10px;padding:10px 13px;background:#f0f9ff;border-left:4px solid #38bdf8;border-radius:0 8px 8px 0}
+.oq-keypoints-label{font-size:.72rem;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.oq-keypoints ul{margin:0;padding-left:18px;font-size:.87rem;color:#374151;line-height:1.6}
+.oq-self-rate-label{margin-top:14px;font-size:.85rem;color:var(--gray);font-weight:600;margin-bottom:6px}
+.oq-rate-btns{display:flex;gap:8px}
+.oq-rate-btn{flex:1;padding:10px;border-radius:10px;border:2px solid;background:#fff;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .1s}
+.oq-rate-btn.rate-ok{border-color:#10b981;color:#047857}
+.oq-rate-btn.rate-ok:hover{background:#d1fae5}
+.oq-rate-btn.rate-no{border-color:#ef4444;color:#b91c1c}
+.oq-rate-btn.rate-no:hover{background:#fee2e2}
+body.dark .oq-question{color:#f3f4f6}
+body.dark .oq-textarea{background:#2d3748;border-color:#4b5563;color:#f3f4f6}
+body.dark .oq-textarea:focus{border-color:#7eb3ff}
+body.dark .oq-textarea:disabled{background:#374151;color:#6b7280}
+body.dark .oq-reveal{background:#3d3010;border-left-color:#fbbf24}
+body.dark .oq-reveal-label{color:#fcd34d}
+body.dark .oq-reveal-text{color:#e5e7eb}
+body.dark .oq-keypoints{background:#0c2a3a;border-left-color:#38bdf8}
+body.dark .oq-keypoints-label{color:#7dd3fc}
+body.dark .oq-keypoints ul{color:#e5e7eb}
+body.dark .oq-rate-btn{background:#2d3748}
 </style>
 </head>
 <body>
@@ -470,7 +501,8 @@ body.dark .load-link{color:#7eb3ff}
     <div class="learn-tabs">
       <button class="learn-tab active" data-tab="fc" onclick="switchLearnTab('fc')">📇 Karteikarten</button>
       <button class="learn-tab" data-tab="q" onclick="switchLearnTab('q')">❓ Quiz</button>
-      <button class="learn-tab" data-tab="t" onclick="switchLearnTab('t')">🔎 Textanalyse</button>
+      <button class="learn-tab" id="tabT" data-tab="t" onclick="switchLearnTab('t')">🔎 Textanalyse</button>
+      <button class="learn-tab" id="tabOQ" data-tab="oq" onclick="switchLearnTab('oq')" style="display:none">✏️ Offene Fragen</button>
     </div>
     <div id="learnContent" class="learn-content"></div>
   </div>
@@ -587,6 +619,7 @@ body.dark .load-link{color:#7eb3ff}
 <script src="vocab/la3-de.js"></script>
 <!-- Learn modules — each file registers itself in window.LEARN_REGISTRY -->
 <script src="learn/epik-de.js"></script>
+<script src="learn/bio5-de.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════
 // BUILT-IN VOCABULARY SETS
@@ -2026,6 +2059,10 @@ function showLearn(moduleId){
   if(!mod){alert('Lernmodul nicht gefunden: '+moduleId);return;}
   learnState={moduleId,mod,tab:'fc'};
   document.getElementById('learnTitle').textContent=(mod.icon||'📖')+' '+mod.name;
+  const tabT=document.getElementById('tabT');
+  if(tabT)tabT.style.display=(mod.texts&&mod.texts.length)?'':'none';
+  const tabOQ=document.getElementById('tabOQ');
+  if(tabOQ)tabOQ.style.display=(mod.openQuestions&&mod.openQuestions.length)?'':'none';
   document.getElementById('learnOverlay').style.display='flex';
   switchLearnTab('fc');
 }
@@ -2042,6 +2079,7 @@ function switchLearnTab(tab){
   if(tab==='fc')renderFlashcardStart();
   else if(tab==='q')renderQuizStart();
   else if(tab==='t')renderTextStart();
+  else if(tab==='oq')renderOpenQStart();
 }
 
 // ── Flashcards ────────────────────────────────────────────
@@ -2264,6 +2302,77 @@ function nextText(){
   st.picked=null;
   st.order=null;
   renderTextEx();
+}
+
+// ── Offene Fragen (Selbstbewertung) ───────────────────────
+function renderOpenQStart(){
+  const mod=learnState.mod;
+  if(!mod.openQuestions||!mod.openQuestions.length){
+    document.getElementById('learnContent').innerHTML='<div class="learn-done"><div class="learn-done-emoji">📭</div><div class="learn-done-msg">Keine offenen Fragen vorhanden.</div></div>';
+    return;
+  }
+  const items=mod.openQuestions.map(q=>{
+    const s=getLearnStat(mod.id,'oq',q.id);
+    return{item:q,correct:s.correct||0,wrong:s.wrong||0};
+  });
+  items.sort((a,b)=>(b.wrong-a.wrong)||(a.correct-b.correct)||Math.random()-.5);
+  learnState.oq={queue:items.map(x=>x.item.id),byId:Object.fromEntries(mod.openQuestions.map(q=>[q.id,q])),idx:0,sessionOk:0,sessionWrong:0};
+  renderOpenQ();
+}
+
+function renderOpenQ(){
+  const st=learnState.oq;
+  const el=document.getElementById('learnContent');
+  if(st.idx>=st.queue.length){
+    el.innerHTML=`<div class="learn-done"><div class="learn-done-emoji">🎉</div><div class="learn-done-msg">Alle Fragen bearbeitet!</div><div>Selbst bewertet richtig: ${st.sessionOk} · noch nicht sicher: ${st.sessionWrong}</div><button class="qnext" onclick="renderOpenQStart()">Noch eine Runde</button></div>`;
+    return;
+  }
+  const q=st.byId[st.queue[st.idx]];
+  const stat=getLearnStat(learnState.moduleId,'oq',q.id);
+  const progressPct=Math.round(st.idx/st.queue.length*100);
+  el.innerHTML=`
+    <div class="learn-stats"><span>Frage ${st.idx+1}/${st.queue.length}</span><span>✅ ${stat.correct||0} · ❌ ${stat.wrong||0}</span></div>
+    <div class="learn-bar"><div class="learn-bar-fill" style="width:${progressPct}%"></div></div>
+    <div class="oq-question">${esc(q.q)}</div>
+    <textarea class="oq-textarea" id="oqAnswer" placeholder="Schreibe deine Antwort hier…"></textarea>
+    <button class="oq-submit" onclick="revealOpenQ()">Antwort abschicken</button>`;
+}
+
+function revealOpenQ(){
+  const st=learnState.oq;
+  const q=st.byId[st.queue[st.idx]];
+  const answerEl=document.getElementById('oqAnswer');
+  const userAnswer=(answerEl?answerEl.value:'').trim();
+  if(!userAnswer){if(answerEl)answerEl.focus();return;}
+  const kpHtml=q.keyPoints.map(p=>`<li>${esc(p)}</li>`).join('');
+  const stat=getLearnStat(learnState.moduleId,'oq',q.id);
+  const progressPct=Math.round(st.idx/st.queue.length*100);
+  document.getElementById('learnContent').innerHTML=`
+    <div class="learn-stats"><span>Frage ${st.idx+1}/${st.queue.length}</span><span>✅ ${stat.correct||0} · ❌ ${stat.wrong||0}</span></div>
+    <div class="learn-bar"><div class="learn-bar-fill" style="width:${progressPct}%"></div></div>
+    <div class="oq-question">${esc(q.q)}</div>
+    <div style="background:#f8f9fa;border-radius:8px;padding:9px 12px;font-size:.88rem;color:#374151;margin-bottom:10px;line-height:1.4;font-style:italic">${esc(userAnswer)}</div>
+    <div class="oq-reveal"><div class="oq-reveal-label">Musterlösung</div><div class="oq-reveal-text">${esc(q.modelAnswer)}</div></div>
+    <div class="oq-keypoints"><div class="oq-keypoints-label">Kernpunkte</div><ul>${kpHtml}</ul></div>
+    <div class="oq-self-rate-label">Wie schätzt du deine Antwort ein?</div>
+    <div class="oq-rate-btns">
+      <button class="oq-rate-btn rate-ok" onclick="rateOpenQ(true)">✅ Hatte ich!</button>
+      <button class="oq-rate-btn rate-no" onclick="rateOpenQ(false)">❌ Noch nicht sicher</button>
+    </div>`;
+}
+
+function rateOpenQ(isOk){
+  const st=learnState.oq;
+  const qid=st.queue[st.idx];
+  const stat=getLearnStat(learnState.moduleId,'oq',qid);
+  if(isOk){stat.correct=(stat.correct||0)+1;st.sessionOk++;}
+  else{stat.wrong=(stat.wrong||0)+1;st.sessionWrong++;
+    const reinsert=Math.min(st.idx+3,st.queue.length);
+    st.queue.splice(reinsert,0,qid);
+  }
+  setLearnStat(learnState.moduleId,'oq',qid,stat);
+  st.idx++;
+  renderOpenQ();
 }
 
 // ═══════════════════════════════════════════════════════════
